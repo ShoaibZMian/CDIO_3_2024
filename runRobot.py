@@ -41,7 +41,12 @@ def robot_loop():
             closest_goal = determine_closest_goal()
             move_to_goal(closest_goal)
             deliver_ball_to_goal()
-            continue
+            receive_image()
+            if detect_ball(image):
+                continue
+            else:
+                print("No ball detected, shutting down.")
+                return False
         else:
             print("No ball detected, shutting down.")
             return False
