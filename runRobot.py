@@ -7,9 +7,12 @@ def receive_image():
     # her modtager vi billeden med cv2
     print("Image received")
    
+def shutDownRobot():
+    print("robot shutting down")
+
 def fallback():
     print("Error starting over again")
-    robot_loop()
+
 
 def detect_ball():
     image = receive_image()# vi modtager et billede 
@@ -29,21 +32,25 @@ def detect_ball():
 
 def move_to_ball():
     print("Moving to the ball")
+    fallback()
 
 
 def pick_up_ball():
     print("Picking up the ball")
+    fallback()
 
 def determine_closest_goal():
     # Vurdering af, hvilken mål der er tættest
     print("Determining closest goal")
-
+    fallback()
 
 def move_to_goal(goal):
     print(f"Moving to the goal at {goal}")
+    fallback()
 
 def deliver_ball_to_goal():
     print("Delivering the ball to the goal")
+    fallback()
 
 def robot_loop():
     start_robot()
@@ -55,7 +62,7 @@ def robot_loop():
         deliver_ball_to_goal()
         detect_ball()
     else:
-        return fallback()
+        return shutDownRobot()
 
 # Start robottens loop
 robot_loop()
