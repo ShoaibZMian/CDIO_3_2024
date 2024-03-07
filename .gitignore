@@ -1,0 +1,5 @@
+#ignore .xx files
+*.log
+*.avi
+*.jpg
+*.mp4
