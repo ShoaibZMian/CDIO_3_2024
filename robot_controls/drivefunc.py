@@ -5,11 +5,14 @@ from pybricks.parameters import Port
 from pybricks.tools import wait
 from pybricks.robotics import DriveBase
 from pybricks.ev3devices import GyroSensor
+from pybricks.parameters import Direction
 import math
+
+
 
 ev3 = EV3Brick()
 # Tilslut gyrosensoren til port 4
-#gyro_sensor = GyroSensor(Port.D)
+gyro_sensor = GyroSensor(Port.S1)
 
 left_motor = Motor(Port.B)
 right_motor = Motor(Port.C)
@@ -31,13 +34,8 @@ def turn_left(degrees):
     robot.turn(degrees)
 
 def turn_right(degrees):
-    print("test")
-#     initial_angle = gyro_sensor.angle()
-#     while gyro_sensor.angle() - initial_angle < degrees:
-#         left_motor.run(100)
-#         right_motor.run(-100)
-#     left_motor.stop()
-#     right_motor.stop()
+    print(gyro_sensor.angle())
+    
 
 
 
