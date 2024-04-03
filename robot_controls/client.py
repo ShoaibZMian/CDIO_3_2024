@@ -2,7 +2,7 @@ import socket
 
 
 def send_command(command):
-    target_host = "192.168.8.139" 
+    target_host = "172.20.10.2" 
     target_port = 8080  
 
    
