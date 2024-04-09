@@ -1,0 +1,5 @@
+walls: 	(hMin = 0, 	sMin = 143, 	vMin = 169),
+	(hMax = 179, 	sMax = 255, 	vMax = 255)
+
+balls: 	(hMin = 0 , 	sMin = 0, 	vMin = 191), 
+	(hMax = 179 , 	sMax = 120, 	vMax = 255)
