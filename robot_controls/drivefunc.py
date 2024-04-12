@@ -60,11 +60,41 @@ def drive_forward(distance_mm):
     robot.stop()  # Stop robotten, når den ønskede afstand er nået
 
 
+def drive_backward(distance_mm):
+    speed = -400  # Sæt en ønsket hastighed for robotten for at køre bagud
+    gyro_sensor.reset_angle(0)  # Nulstil gyrosensorens vinkel
 
+    # Beregn rotationen nødvendig for at dække den ønskede afstand bagud
+    # Omregningsfaktoren er antallet af grader pr. mm (omkreds af hjulet er pi*diameter)
+    degrees_to_rotate = (360 * distance_mm) / (math.pi * WHEEL_DIAMETER)
 
+    # Nulstil motorernes rotationsvinkel
+    left_motor.reset_angle(0)
+    right_motor.reset_angle(0)
 
-def drive_backward(distance_cm):
-    print("dummy")
+    # Start robotten med at køre bagud
+    robot.drive(speed, 0)  # Den negative hastighed får robotten til at køre bagud
+
+    # Loop indtil den ønskede afstand er tilbagelagt
+    while True:
+        # Beregn den gennemsnitlige rotationsvinkel for de to motorer
+        avg_rotation = (left_motor.angle() + right_motor.angle()) / 2
+
+        # Check om den ønskede afstand er nået
+        if abs(avg_rotation) >= degrees_to_rotate:
+            break
+
+        # Beregn den aktuelle afvigelse fra den oprindelige retning
+        deviation = gyro_sensor.angle()
+        correction = deviation * 1.5  # En simpel proportional controller
+
+        # Juster robottens styring baseret på afvigelsen, også mens den kører bagud
+        robot.drive(speed, -correction)
+
+        wait(10)  # En kort ventetid for at sikre, at løkken ikke kører for hurtigt
+
+    robot.stop()  # Stop robotten, når den ønskede afstand er nået
+
 
 def turn_right(degrees):
     initial_angle = gyro_sensor.angle()
