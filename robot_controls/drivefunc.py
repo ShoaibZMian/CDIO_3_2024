@@ -25,17 +25,63 @@ robot = DriveBase(left_motor, right_motor, WHEEL_DIAMETER, AXEL_TRACK)
 
 
 def drive_forward(distance_mm):
-    robot.straight(distance_mm)
+    speed = 400  # Sæt en ønsket hastighed for robotten
+    gyro_sensor.reset_angle(0)  # Nulstil gyrosensorens vinkel
+
+    # Beregn rotationen nødvendig for at dække den ønskede afstand
+    # Omregningsfaktoren er antallet af grader pr. mm (omkreds af hjulet er pi*diameter)
+    degrees_to_rotate = (360 * distance_mm) / (math.pi * WHEEL_DIAMETER)
+
+    # Nulstil motorernes rotationsvinkel
+    left_motor.reset_angle(0)
+    right_motor.reset_angle(0)
+
+    # Start robotten med at køre lige frem
+    robot.drive(speed, 0)
+
+    # Loop indtil den ønskede afstand er tilbagelagt
+    while True:
+        # Beregn den gennemsnitlige rotationsvinkel for de to motorer
+        avg_rotation = (left_motor.angle() + right_motor.angle()) / 2
+
+        # Check om den ønskede afstand er nået
+        if abs(avg_rotation) >= degrees_to_rotate:
+            break
+
+        # Beregn den aktuelle afvigelse fra den oprindelige retning
+        deviation = gyro_sensor.angle()
+        correction = deviation * 1.5  # En simpel proportional controller
+
+        # Juster robottens styring baseret på afvigelsen
+        robot.drive(speed, -correction)
+
+        wait(10)  # En kort ventetid for at sikre, at løkken ikke kører for hurtigt
+
+    robot.stop()  # Stop robotten, når den ønskede afstand er nået
+
+
+
+
 
 def drive_backward(distance_cm):
     print("dummy")
 
-def turn_left(degrees):
-    robot.turn(degrees)
-
 def turn_right(degrees):
-    print(gyro_sensor.angle())
-    
+    initial_angle = gyro_sensor.angle()
+    target_angle = initial_angle - degrees
+    while gyro_sensor.angle() > target_angle:
+        robot.drive(-100, 50)
+        wait(100)
+    robot.stop()
+
+def turn_left(degrees):
+    initial_angle = gyro_sensor.angle()
+    target_angle = initial_angle + degrees
+    while gyro_sensor.angle() < target_angle:
+        robot.drive(100, -50)
+        wait(100)
+    robot.stop()
+   
 
 
 
