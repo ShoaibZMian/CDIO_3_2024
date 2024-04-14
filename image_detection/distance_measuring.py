@@ -19,15 +19,48 @@ def show_img():
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def calculate_mapping():
-    # measurement is in cm
-    point1 = np.array([536, 31])
-    point2 = np.array([542, 581])
-    distance = 180
+def show_video(video_path, mp, obj1, obj2):
+    cap = cv2.VideoCapture(video_path)
 
-    object_width_pixels = np.sqrt(np.power((point1[0]-point2[0]),2) + np.power((point1[1]-point2[1]),2))
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-    pixel_size_meters = distance / object_width_pixels
+        one_pixel = calculate_mapping(mp[0],mp[1], 180)
+
+        cv2.putText(frame, f"Fps: {str(int(cap.get(cv2.CAP_PROP_FPS)))}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+        cv2.putText(frame, f"1 Pixel: {str(np.round(one_pixel, 4))}cm", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+
+        for point in mp:
+            center_x, center_y = point
+            cv2.circle(img=frame, center=(center_x, center_y), radius=5, color=(255,0,0), thickness=-1)
+        cv2.line(frame, tuple(mp[0]), tuple(mp[1]), (255, 0, 0), thickness=2)
+        midpoint = ((mp[0,0] + mp[1,0]) // 2, ((mp[0,1] + mp[1,1]) // 2)-5)
+        cv2.putText(frame, "180 cm", midpoint, cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+
+        cv2.circle(img=frame, center=(obj1[0], obj1[1]), radius=5, color=(255,0,0), thickness=-1)
+        cv2.putText(frame, "Ball 1", obj1-5, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
+        cv2.circle(img=frame, center=(obj2[0], obj2[1]), radius=5, color=(255,0,0), thickness=-2)
+        cv2.putText(frame, "Ball 1", obj2+5, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
+        cv2.line(frame, obj1, obj2, (255, 0, 0), thickness=2)
+        midpoint2 = ((obj1[0] + obj2[0]) // 2, ((obj1[1] + obj2[1]) // 2)-5)
+        cv2.putText(frame, f"{str(np.round(calculate_distance(obj1, obj2, one_pixel), 4))}cm", midpoint2, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+        
+
+        cv2.imshow("Object Detection", frame)
+
+        key = cv2.waitKey(1)
+        if key == 27:  # 27 = esc
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+def calculate_mapping(p1, p2, distance_between):
+    object_width_pixels = np.sqrt(np.power((p1[0]-p2[0]),2) + np.power((p1[1]-p2[1]),2))
+
+    pixel_size_meters = distance_between / object_width_pixels
 
     return pixel_size_meters
 
@@ -37,8 +70,15 @@ def calculate_distance(p1, p2, pixel_size_meters):
     rounded_result = np.round(result,3)
     return rounded_result
 
-ball1 = np.array([154, 349])
-ball2 = np.array([522, 300])
+measurement_point1 = np.array([366, 52])
+measurement_point2 = np.array([1642, 49])
 
-print(f"Distance is: {(calculate_distance(ball1, ball2, calculate_mapping()))} cm")
-show_img()
+ball1 = np.array([388, 839])
+ball2 = np.array([893, 959])
+
+measurement_points = np.array([
+    measurement_point1,
+    measurement_point2
+])
+
+show_video("/Users/matt/CDIO_3_2024/image_detection/data/test_video.mp4", measurement_points, ball1, ball2)
