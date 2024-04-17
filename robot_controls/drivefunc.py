@@ -11,7 +11,7 @@ import math
 
 
 ev3 = EV3Brick()
-# Tilslut gyrosensoren til port 4
+# Tilslut gyrosensoren til port 1
 gyro_sensor = GyroSensor(Port.S1)
 
 left_motor = Motor(Port.B)
@@ -97,20 +97,24 @@ def drive_backward(distance_mm):
 
 
 def turn_right(degrees):
-    initial_angle = gyro_sensor.angle()
+    initial_angle = gyro_sensor.angle(0)
     target_angle = initial_angle - degrees
     while gyro_sensor.angle() > target_angle:
-        robot.drive(-100, 50)
+        robot.drive(-100, 100)
         wait(100)
     robot.stop()
 
 def turn_left(degrees):
-    initial_angle = gyro_sensor.angle()
-    target_angle = initial_angle + degrees
-    while gyro_sensor.angle() < target_angle:
-        robot.drive(100, -50)
-        wait(100)
-    robot.stop()
+    gyro_sensor.reset_angle(0)
+    robot.turn(degrees)
+    wait(5)
+    print(gyro_sensor.angle())
+    # initial_angle = gyro_sensor.reset_angle()
+   
+    # while gyro_sensor.angle() < degrees:
+    #     robot.drive(100, -100)
+    #     wait(100)
+    # robot.stop()
    
 
 
