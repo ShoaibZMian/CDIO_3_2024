@@ -1,52 +1,79 @@
+from time import sleep
 from graphics import *
 import math
 
 #init window
 win = GraphWin(width = 600, height = 600)
-win.setCoords(0, 0, 100, 100)
+coordsWidth = 300
+coordsHeight = 300
+win.setCoords(0, 0, coordsWidth, coordsHeight)
 
-def rotateRectangle(rectangle: Polygon, degrees, centerX, centerY) -> Polygon:
-    if len(rectangle.points) != 4:
-        raise Exception(f"Provided polygon must be a rectangle, this one has {len(rectangle.points)} vertices instead of 4")
+def rotatePolygon(polygon: Polygon, degrees, center: Point) -> Polygon:
     rotatedVertices = []
-    for point in rectangle.points:
-        x = centerX + point.x * math.cos(math.radians(degrees)) - point.y * math.sin(math.radians(degrees))
-        y = centerY + point.y * math.cos(math.radians(degrees)) + point.x * math.sin(math.radians(degrees))
-        rotatedVertices.append(Point(x,y))
-
+    for point in polygon.points:
+        newX = center.x + (point.x - center.x) * math.cos(math.radians(degrees)) - (point.y - center.x) * math.sin(math.radians(degrees))
+        newY = center.x + (point.x - center.x) * math.sin(math.radians(degrees)) + (point.y - center.x) * math.cos(math.radians(degrees))
+        rotatedVertices.append(Point(newX,newY))
     return Polygon(rotatedVertices)
 
+def movePolygon(polygon: Polygon, dx, dy) -> Polygon:
+    movedVertices = []
+    for point in polygon.points:
+        newX = point.x + dx
+        newY = point.y + dy
+        movedVertices.append(Point(newX,newY))
+    return Polygon(movedVertices)
+
 # draw axes
-xAxis = Line(Point(0, 50), Point(100, 50)).draw(win)
-yAxis = Line(Point(50, 0), Point(50, 100)).draw(win)
+origin_offset = 150
+xAxis = Line(Point(0, origin_offset), Point(coordsWidth, origin_offset)).draw(win)
+yAxis = Line(Point(origin_offset, 0), Point(origin_offset, coordsHeight)).draw(win)
 
 
-# draw test square
-center = 55
+## define square paramters
+center = Point(origin_offset + 15, origin_offset + 15)
 side = 20
-
-vertices = [Point(center-side/2, center-side/2), Point(center+side/2, center-side/2), Point(center+side/2, center+side/2), Point(center-side/2, center+side/2)]
+vertices = [Point(center.x-side/2, center.y-side/2), 
+            Point(center.x+side/2, center.y-side/2),
+            Point(center.x+side/2, center.y+side/2), 
+            Point(center.x-side/2, center.y+side/2)]
 square = Polygon(vertices)
 square.setOutline('red')
+
+# define newSquare
+newSquare = Polygon(vertices)
+
+# define pentagon
+centerPentagon = Point(origin_offset - 50, origin_offset - 50)
+pentagon = Polygon(Point(centerPentagon.x, centerPentagon.y + 20), 
+                   Point(centerPentagon.x - 15, centerPentagon.y + 5),
+                   Point(centerPentagon.x - 10, centerPentagon.y - 10),
+                   Point(centerPentagon.x + 10, centerPentagon.y - 10),
+                   Point(centerPentagon.x + 15, centerPentagon.y + 5))
+
+# draw polygons
 square.draw(win)
-
-newSquare = rotateRectangle(square, 45, 0, 0)
-newSquare.setOutline('green')
 newSquare.draw(win)
+pentagon.draw(win)
 
-# wait for input before closing
-win.getKey()
+# animate polygons
+nextMove = Point(2, 2)
+while True:
+    if win.checkKey():
+        break
+    else:
+        sleep(0.1)
+        square.undraw()
+        square = rotatePolygon(square, -3, center)
+        square.setOutline('red')
+        square.draw(win)
 
+        newSquare.undraw()
+        newSquare = rotatePolygon(newSquare, 5, Point(origin_offset, origin_offset))
+        newSquare.setOutline('green')
+        newSquare.draw(win)
 
-# swap boxes
-#switchSquare = 0
-#while True:
-#    if win.getKey():
-#        if switchSquare == 0:
-#            mySquare.undraw()
-#            newSquare.draw(win)
-#            switchSquare = 1
-#        else:
-#            newSquare.undraw()
-#            mySquare.draw(win)
-#            switchSquare = 0
+        pentagon.undraw()
+        pentagon = rotatePolygon(pentagon, -10, centerPentagon)
+        pentagon.setOutline('purple')
+        pentagon.draw(win)
