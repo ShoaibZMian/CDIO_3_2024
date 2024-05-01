@@ -1,5 +1,10 @@
+from ultralytics import YOLO
 import cv2
 import numpy as np
+import math
+import time
+
+
 def show_img():
     img_path = "/Users/matt/CDIO_3_2024/image_detection/data/small dataset/train/images/WIN_20240313_09_24_04_Pro_mp4-0002_jpg.rf.fb71d3f1dd2e7327ede6b41f3be4e43a.jpg"
     img = cv2.imread(img_path)
@@ -57,6 +62,72 @@ def show_video(video_path, mp, obj1, obj2):
     cap.release()
     cv2.destroyAllWindows()
 
+def show_webcam():
+    model = YOLO("C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v1/runs/detect/yolov8n_b8_50e/weights/best.pt")
+    classNames = ["BACK", "BALL", "BIG_GOAL", "BORDERS", "EGG", "FRONT", "OBSTACLES", "ROBOT", "SMALL_GOAL"]
+
+    cap = cv2.VideoCapture(0)
+    #cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    #cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+
+    prev_time = time.time()
+
+    while True:
+        success, img = cap.read()
+        results = model(img, stream=True)
+
+        # coordinates
+        for r in results:
+            boxes = r.boxes
+
+            for box in boxes:
+                # bounding box
+                x1, y1, x2, y2 = box.xyxy[0]
+                x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2) # convert to int values
+
+                mid_x = (x1+x2) // 2
+                mid_y = (y1+y2) // 2
+
+                cv2.circle(img=img, center=(mid_x, mid_y), radius=5, color=(255,0,0), thickness=-2)
+                # put box in cam
+                cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 255), 1)
+
+                # confidence
+                confidence = math.ceil((box.conf[0]*100))/100
+                #print("Confidence --->",confidence)
+
+                # class name
+                cls = int(box.cls[0])
+                #print(f"Class name --> {classNames[cls]}")
+
+                # object details
+                org = [x1, y1]
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                fontScale = 0.5
+                color = (255, 0, 0)
+                thickness = 1
+
+                text = f"{classNames[cls]}: {confidence}: x={mid_x} y={mid_y}"
+                cv2.putText(img, text, org, font, fontScale, color, thickness)
+
+
+        # Calculate FPS
+        current_time = time.time()
+        fps = 1 / (current_time - prev_time)
+        prev_time = current_time
+
+        # Display FPS
+        cv2.putText(img, f"Fps: {fps:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+
+        cv2.imshow('Webcam', img)
+        if cv2.waitKey(1) == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
 def calculate_mapping(p1, p2, distance_between):
     object_width_pixels = np.sqrt(np.power((p1[0]-p2[0]),2) + np.power((p1[1]-p2[1]),2))
 
@@ -70,15 +141,17 @@ def calculate_distance(p1, p2, pixel_size_meters):
     rounded_result = np.round(result,3)
     return rounded_result
 
-measurement_point1 = np.array([366, 52])
-measurement_point2 = np.array([1642, 49])
+# measurement_point1 = np.array([366, 52])
+# measurement_point2 = np.array([1642, 49])
 
-ball1 = np.array([388, 839])
-ball2 = np.array([893, 959])
+# ball1 = np.array([388, 839])
+# ball2 = np.array([893, 959])
 
-measurement_points = np.array([
-    measurement_point1,
-    measurement_point2
-])
+# measurement_points = np.array([
+#     measurement_point1,
+#     measurement_point2
+# ])
 
-show_video("/Users/matt/CDIO_3_2024/image_detection/data/test_video.mp4", measurement_points, ball1, ball2)
+# show_video("/Users/matt/CDIO_3_2024/image_detection/data/test_video.mp4", measurement_points, ball1, ball2)
+
+show_webcam()

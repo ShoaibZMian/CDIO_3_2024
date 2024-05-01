@@ -1,7 +1,9 @@
-yolo task=detect mode=train model=yolov8n.pt imgsz=640 data=data.yaml epochs=50 batch=8 name=yolov8n_v8_50e
+yolo task=detect mode=train model=yolov8n.pt imgsz=640 data=data.yaml epochs=50 batch=8 name=yolov8n_b8_50e
 	
 yolo task=detect mode=val model=C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/big_dataset_rgb/runs/detect/yolov8n_50e/weights/best.pt name=yolov8n_eval data=data.yaml imgsz=640
 
 yolo task=detect mode=predict model=C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/big_dataset_rgb/runs/detect/yolov8m_50e/weights/best.pt source=C:/Users/SkumJustEatMe/CDIO_3_2024/test_video.mp4 show=True name=yolov8m_v8_50e_test_run conf=0.55 show_labels=True show_conf=True
 
 yolo task=detect mode=predict model=C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/big_dataset_rgb/runs/detect/yolov8m_50e/weights/best.pt source=C:/Users/SkumJustEatMe/CDIO_3_2024/test_video.mp4 show=True name=yolov8m_v8_50e_test_run_without_conf show_labels=True show_conf=True
+
+yolo task=detect mode=predict model=C:\Users\SkumJustEatMe\CDIO_3_2024\image_detection\data\matt_test_dataset\yolov8n.pt source=C:\Users\SkumJustEatMe\CDIO_3_2024\image_detection\data\test_video.mp4 show=True name=yolov8m_v8_50e_test_run_without_conf show_labels=True show_conf=True
