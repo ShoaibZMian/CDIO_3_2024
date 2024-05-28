@@ -1,0 +1,6 @@
+names:
+- dog
+- backpack
+nc: 2
+train: C:\Users\SkumJustEatMe\CDIO_3_2024\Testing\Label_Data/train/images
+val: C:\Users\SkumJustEatMe\CDIO_3_2024\Testing\Label_Data/valid/images
