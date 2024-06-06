@@ -260,12 +260,14 @@ def video_object_tracking():
 
 
 def video_object_tracking_gpu():
-    model = YOLO("C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v2/runs/detect/yolov8m_b8_50e/weights/best.pt")
+    model = YOLO("C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v4/runs/detect/our_model/weights/best.pt")
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model.to(device)
 
     video_path = ("C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/test_video.mp4")
     cap = cv2.VideoCapture(video_path)
+
+    class_names = ['back triangle', 'ball', 'borders', 'egg', 'front triangle', 'obstacle', 'orange ball', 'robot', 'small goal', 'white ball']
 
     ret = True
     while ret:
@@ -282,10 +284,11 @@ def video_object_tracking_gpu():
                     x1, y1, x2, y2 = map(int, obj.xyxy[0])
                     label = obj.cls
                     confidence = obj.conf
+                    class_name = class_names[int(obj.cls[0])]
 
                     cX = (x1 + x2) // 2
                     cY = (y1 + y2) // 2
-                    text = f'Conf: {confidence} Lab: {label} X={cX}, Y={cY}'
+                    text = f'Name: {class_name} Conf: {confidence} X={cX}, Y={cY}'
                     text_position = (cX, cY - 10)
 
                     (text_width, text_height), baseline = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
