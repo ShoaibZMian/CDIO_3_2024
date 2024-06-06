@@ -260,7 +260,7 @@ def video_object_tracking():
 
 
 def video_object_tracking_gpu():
-    model = YOLO("C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v4/runs/detect/our_model/weights/best.pt")
+    model = YOLO("C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v5/runs/detect/our_model/weights/best.pt")
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model.to(device)
 
@@ -305,5 +305,111 @@ def video_object_tracking_gpu():
     cap.release()
     cv2.destroyAllWindows()
 
+def object_detection_opencv():
+    video_path = ("C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/test_video.mp4")
+    cap = cv2.VideoCapture(video_path)
 
-video_object_tracking_gpu()
+    ball_id = 1
+    border_id = 1
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            print("Error: Could not read frame.")
+            break
+        
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        
+        # Define the range for white color in HSV
+        lower_white = np.array([0, 0, 200])
+        upper_white = np.array([180, 70, 255])
+
+         # Define the range for red color in HSV
+        lower_red1 = np.array([0, 120, 70])
+        upper_red1 = np.array([10, 255, 255])
+        lower_red2 = np.array([170, 120, 70])
+        upper_red2 = np.array([180, 255, 255])
+        
+        # Create a mask for the white color
+        mask_white = cv2.inRange(hsv, lower_white, upper_white)
+
+         # Create a mask for the red color (borders)
+        mask_red1 = cv2.inRange(hsv, lower_red1, upper_red1)
+        mask_red2 = cv2.inRange(hsv, lower_red2, upper_red2)
+        mask_red = cv2.bitwise_or(mask_red1, mask_red2)
+
+        # Morphological operations to clean up the mask
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+        mask_red = cv2.morphologyEx(mask_red, cv2.MORPH_CLOSE, kernel)
+        mask_red = cv2.morphologyEx(mask_red, cv2.MORPH_OPEN, kernel)
+        
+        # Find contours on the masked image
+        contours_white, _ = cv2.findContours(mask_white, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        # Draw contours on the original frame
+        for contour in contours_white:
+            area = cv2.contourArea(contour)
+            
+            if area > 450:
+                perimeter = cv2.arcLength(contour, True)
+                circularity = 4 * np.pi * (area / (perimeter * perimeter))
+                
+                if 0.4 < circularity < 1.2:
+                    x, y, w, h = cv2.boundingRect(contour)
+                    aspect_ratio = float(w) / h
+                    if 0.8 < aspect_ratio < 1.2:
+                        cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
+                        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+
+                        text = f"Ball {ball_id}: Area: {area:.2f}, Circ: {circularity:.2f}, AR: {aspect_ratio:.2f}"
+                        cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                        ball_id += 1
+        
+        # Find contours on the red mask (borders)
+        contours_red, _ = cv2.findContours(mask_red, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        for contour in contours_red:
+            area = cv2.contourArea(contour)
+            cv2.putText(frame, f"Area: {area}", (50, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            
+            if area > 10:  # Adjust based on your needs
+                x, y, w, h = cv2.boundingRect(contour)
+                aspect_ratio = float(w) / h
+                cv2.putText(frame, f"A ratio: {aspect_ratio}", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+
+                if 0.8 < aspect_ratio < 1.5:  # Assuming borders are square-like for the cross detection
+                    # Further analysis to ensure it's a cross
+                    rect = cv2.minAreaRect(contour)
+                    box = cv2.boxPoints(rect)
+                    box = np.array(box, dtype=np.int32)
+                    
+                    width = int(rect[1][0])
+                    height = int(rect[1][1])
+                    
+                    # Calculate the dimensions ratio
+                    ratio = width / height if width > height else height / width
+
+                    cv2.putText(frame, f"Ratio: {ratio}", (50, 65), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                    
+                    if 1 < ratio < 3:  # Aspect ratio for cross shape (tweak as needed)
+                        cv2.drawContours(frame, [box], 0, (0, 0, 255), 2)
+                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 255), 2)
+
+                        for (corner_x, corner_y) in box:
+                            cv2.circle(frame, (corner_x-50, corner_y-50), 5, (0, 255, 0), -1)  # Adjust color and size as needed
+
+                        text = f"Border {border_id}: Area: {area:.2f}, AR: {aspect_ratio:.2f}"
+                        cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                        border_id += 1
+        
+        # Display the resulting frame
+        cv2.imshow('Detected Ping Pong Balls and Borders', frame)
+        
+        # Break the loop on 'q' key press
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    cap.release()
+    cv2.destroyAllWindows()
+
+#video_object_tracking_gpu()
+object_detection_opencv()
