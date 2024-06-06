@@ -260,19 +260,14 @@ def video_object_tracking():
 
 
 def video_object_tracking_gpu():
-    # Load model and move to GPU
-    model = YOLO(
-        "C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v2/runs/detect/yolov8m_b8_50e/weights/best.pt"
-    )
-    model.to("cuda")  # Move model to GPU
+    model = YOLO("C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v2/runs/detect/yolov8m_b8_50e/weights/best.pt")
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    model.to(device)
 
-    video_path = (
-        "C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/test_video.mp4"
-    )
+    video_path = ("C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/test_video.mp4")
     cap = cv2.VideoCapture(video_path)
 
     ret = True
-    # read frames
     while ret:
         ret, frame = cap.read()
 
@@ -280,29 +275,26 @@ def video_object_tracking_gpu():
             results = model.track(frame, persist=True, conf=0.5, iou=0.3)
 
             #frame_ = results[0].plot()
+            cv2.putText(frame, f"Model is using: {device}", (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
-            # Extract coordinates of detected objects
             for result in results:
                 for obj in result.boxes:
                     x1, y1, x2, y2 = map(int, obj.xyxy[0])
-                    label = obj.cls  # Class ID of the detected object
-                    confidence = obj.conf  # Confidence of the detection
+                    label = obj.cls
+                    confidence = obj.conf
 
                     cX = (x1 + x2) // 2
                     cY = (y1 + y2) // 2
                     text = f'Conf: {confidence} Lab: {label} X={cX}, Y={cY}'
                     text_position = (cX, cY - 10)
 
-                    # Draw a rectangle as background for better text visibility
                     (text_width, text_height), baseline = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
                     cv2.rectangle(frame, (text_position[0], text_position[1] - text_height - baseline),
                                     (text_position[0] + text_width, text_position[1] + baseline), (0, 0, 0), -1)
 
-                    # Draw coordinates on the frame
                     cv2.putText(frame, text, text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
 
-            # Visualize
             cv2.imshow("frame", frame)
             if cv2.waitKey(25) & 0xFF == ord("q"):
                 break
@@ -311,17 +303,4 @@ def video_object_tracking_gpu():
     cv2.destroyAllWindows()
 
 
-# measurement_point1 = np.array([366, 52])
-# measurement_point2 = np.array([1642, 49])
-
-# ball1 = np.array([388, 839])
-# ball2 = np.array([893, 959])
-
-# measurement_points = np.array([
-#     measurement_point1,
-#     measurement_point2
-# ])
-
-# show_video("/Users/matt/CDIO_3_2024/image_detection/data/test_video.mp4", measurement_points, ball1, ball2)
-# print(torch.cuda.is_available())
 video_object_tracking_gpu()
