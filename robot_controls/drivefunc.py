@@ -17,8 +17,8 @@ left_motor = Motor(Port.B)
 right_motor = Motor(Port.C)
 
 # Constants
-WHEEL_DIAMETER = 33.5  # Hjulets størrelse i mm
-AXEL_TRACK = 140  # Distancen mellem hjulene
+WHEEL_DIAMETER = 50.3  # Hjulets størrelse i mm
+AXEL_TRACK = 170  # Distancen mellem hjulene
 
 robot = DriveBase(left_motor, right_motor, WHEEL_DIAMETER, AXEL_TRACK)
 
@@ -29,7 +29,8 @@ def drive_forward(distance_mm):
 
     while robot.distance() <= distance_cm:
         correction = 0 - gyro.angle()
-        robot.drive(400, correction)  # 400 mm/seconds
+        print(correction)
+        robot.drive(50, correction)  # 400 mm/seconds
 
     robot.stop()
     left_motor.brake()
@@ -49,11 +50,13 @@ def turn_right(degrees):
     gyro.reset_angle(0)
 
     while gyro.angle < degrees:
-        robot.drive(400, 10)
+        print("turning")
+        robot.drive(200, 50)
+        print("after turn")
     robot.stop()
     left_motor.brake()
     right_motor.brake()
-    print(f"Robot turned {gyro.angle()}")
+    #print(f"Robot turned {gyro.angle()}")
 
 
 def turn_left(degrees):
