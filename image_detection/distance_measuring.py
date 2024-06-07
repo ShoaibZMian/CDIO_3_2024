@@ -306,11 +306,13 @@ def video_object_tracking_gpu():
     cv2.destroyAllWindows()
 
 def object_detection_opencv():
-    video_path = ("C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/test_video.mp4")
+    #video_path = ("C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/test_video.mp4")
+    video_path = (1)
     cap = cv2.VideoCapture(video_path)
 
     ball_id = 1
     border_id = 1
+    purple_id = 1
 
     while True:
         ret, frame = cap.read()
@@ -329,6 +331,9 @@ def object_detection_opencv():
         upper_red1 = np.array([10, 255, 255])
         lower_red2 = np.array([170, 120, 70])
         upper_red2 = np.array([180, 255, 255])
+
+        lower_purple = np.array([130, 50, 50])
+        upper_purple = np.array([160, 255, 255])
         
         # Create a mask for the white color
         mask_white = cv2.inRange(hsv, lower_white, upper_white)
@@ -338,10 +343,15 @@ def object_detection_opencv():
         mask_red2 = cv2.inRange(hsv, lower_red2, upper_red2)
         mask_red = cv2.bitwise_or(mask_red1, mask_red2)
 
+        mask_purple = cv2.inRange(hsv, lower_purple, upper_purple)
+
         # Morphological operations to clean up the mask
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
         mask_red = cv2.morphologyEx(mask_red, cv2.MORPH_CLOSE, kernel)
         mask_red = cv2.morphologyEx(mask_red, cv2.MORPH_OPEN, kernel)
+
+        mask_purple = cv2.morphologyEx(mask_purple, cv2.MORPH_CLOSE, kernel)
+        mask_purple = cv2.morphologyEx(mask_purple, cv2.MORPH_OPEN, kernel)
         
         # Find contours on the masked image
         contours_white, _ = cv2.findContours(mask_white, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -350,7 +360,7 @@ def object_detection_opencv():
         for contour in contours_white:
             area = cv2.contourArea(contour)
             
-            if area > 450:
+            if 450 < area < 1000:
                 perimeter = cv2.arcLength(contour, True)
                 circularity = 4 * np.pi * (area / (perimeter * perimeter))
                 
@@ -358,10 +368,13 @@ def object_detection_opencv():
                     x, y, w, h = cv2.boundingRect(contour)
                     aspect_ratio = float(w) / h
                     if 0.8 < aspect_ratio < 1.2:
+                        x_c = int(x+(w/2))
+                        y_c = int(y+(h/2))
                         cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
                         cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+                        cv2.circle(frame, (x_c, y_c), 5, (0, 0, 255), -1)
 
-                        text = f"Ball {ball_id}: Area: {area:.2f}, Circ: {circularity:.2f}, AR: {aspect_ratio:.2f}"
+                        text = f" X: {x_c} Y: {y_c} Ball {ball_id}: Area: {area:.2f}, Circ: {circularity:.2f}, AR: {aspect_ratio:.2f}"
                         cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
                         ball_id += 1
         
@@ -401,7 +414,29 @@ def object_detection_opencv():
                         text = f"Border {border_id}: Area: {area:.2f}, AR: {aspect_ratio:.2f}"
                         cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
                         border_id += 1
+
+        contours_purple, _ = cv2.findContours(mask_purple, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
+        for contour in contours_purple:
+            area = cv2.contourArea(contour)
+            
+            if area > 500:  # Adjust based on your needs
+                x, y, w, h = cv2.boundingRect(contour)
+                aspect_ratio = float(w) / h
+                
+                if 0.8 < aspect_ratio < 1.2:  # Filter for approximately rectangular shapes
+                    cv2.drawContours(frame, [contour], -1, (255, 0, 255), 2)
+                    cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), 2)
+
+                    # Draw a dot in every corner of the bounding box
+                    corners = [(x, y), (x + w, y), (x, y + h), (x + w, y + h)]
+                    cv2.circle(frame, (int(x+(w/2)), int(y+(h/2))), 5, (0, 0, 255), -1)  # Purple color for the dot
+
+                    text = f"Purple {purple_id}: Area: {area:.2f}, AR: {aspect_ratio:.2f}"
+                    cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                    purple_id += 1
+
+
         # Display the resulting frame
         cv2.imshow('Detected Ping Pong Balls and Borders', frame)
         
