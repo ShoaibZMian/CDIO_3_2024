@@ -120,7 +120,7 @@ def show_video(video_path, mp, obj1, obj2):
 
 def show_webcam():
     model = YOLO(
-        "C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v1/runs/detect/yolov8n_b8_50e/weights/best.pt"
+        "C:/Users/Shweb/Downloads/train4-20240608T153413Z-001.zip/train4/weights/best.pt"
     )
     classNames = [
         "BACK",
@@ -236,11 +236,11 @@ def calculate_distance(p1, p2, pixel_size_meters):
 
 def video_object_tracking():
     model = YOLO(
-        "C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v2/runs/detect/yolov8m_b8_50e/weights/best.pt"
+        "C:/Users/Shweb/Downloads/train4-20240608T153413Z-001/train4/weights/best.pt"
     )
 
     video_path = (
-        "C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/test_video.mp4"
+        "C:/Users/Shweb/Downloads/Filmm.mov"
     )
     cap = cv2.VideoCapture(video_path)
 
@@ -260,11 +260,11 @@ def video_object_tracking():
 
 
 def video_object_tracking_gpu():
-    model = YOLO("C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v5/runs/detect/our_model/weights/best.pt")
+    model = YOLO("C:/Users/Shweb/Downloads/train4-20240608T153413Z-001.zip/train4/weights/best.pt")
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model.to(device)
 
-    video_path = ("C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/test_video.mp4")
+    video_path = ("C:/Users/Shweb/Downloads/Filmm.mov")
     cap = cv2.VideoCapture(video_path)
 
     class_names = ['back triangle', 'ball', 'borders', 'egg', 'front triangle', 'obstacle', 'orange ball', 'robot', 'small goal', 'white ball']
@@ -280,22 +280,23 @@ def video_object_tracking_gpu():
             cv2.putText(frame, f"Model is using: {device}", (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
             for result in results:
-                for obj in result.boxes:
-                    x1, y1, x2, y2 = map(int, obj.xyxy[0])
-                    label = obj.cls
-                    confidence = obj.conf
-                    class_name = class_names[int(obj.cls[0])]
+                if result.boxes is not None:
+                    for obj in result.boxes:
+                        x1, y1, x2, y2 = map(int, obj.xyxy[0])
+                        label = obj.cls
+                        confidence = obj.conf
+                        class_name = class_names[int(obj.cls[0])]
 
-                    cX = (x1 + x2) // 2
-                    cY = (y1 + y2) // 2
-                    text = f'Name: {class_name} Conf: {confidence} X={cX}, Y={cY}'
-                    text_position = (cX, cY - 10)
+                        cX = (x1 + x2) // 2
+                        cY = (y1 + y2) // 2
+                        text = f'Name: {class_name} Conf: {confidence} X={cX}, Y={cY}'
+                        text_position = (cX, cY - 10)
 
-                    (text_width, text_height), baseline = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
-                    cv2.rectangle(frame, (text_position[0], text_position[1] - text_height - baseline),
-                                    (text_position[0] + text_width, text_position[1] + baseline), (0, 0, 0), -1)
+                        (text_width, text_height), baseline = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
+                        cv2.rectangle(frame, (text_position[0], text_position[1] - text_height - baseline),
+                                        (text_position[0] + text_width, text_position[1] + baseline), (0, 0, 0), -1)
 
-                    cv2.putText(frame, text, text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                        cv2.putText(frame, text, text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
 
             cv2.imshow("frame", frame)
@@ -306,8 +307,8 @@ def video_object_tracking_gpu():
     cv2.destroyAllWindows()
 
 def object_detection_opencv():
-    #video_path = ("C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/test_video.mp4")
-    video_path = (1)
+    video_path = ("C:/Users/Shweb/Downloads/Filmm.mov")
+    #video_path = (1)
     cap = cv2.VideoCapture(video_path)
 
     ball_id = 1
@@ -447,4 +448,5 @@ def object_detection_opencv():
     cv2.destroyAllWindows()
 
 #video_object_tracking_gpu()
-object_detection_opencv()
+#object_detection_opencv()
+video_object_tracking()
