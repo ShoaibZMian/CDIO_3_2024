@@ -4,5 +4,6 @@
 *.jpg
 *.mp4
 *.png
+*.pt
 .DS_Store
 image_detection/data
