@@ -1,7 +1,5 @@
 #!/usr/bin/env pybricks-micropython
 from drivefunc import drive_forward, drive_backward, turn_left, turn_right
-
-
 import re
 
 def parse_and_execute(command):
@@ -17,8 +15,7 @@ def parse_and_execute(command):
     if parts:
         items = parts.groups()
     else:
-        print("Invalid command or format.")
-        return
+        return "Invalid command or format."
 
     action = items[0]
     distance = int(items[1])
@@ -26,15 +23,15 @@ def parse_and_execute(command):
     if action in ["forward", "backward", "left", "right"]:
         if action == "forward":
             print("Driving forward {} cm".format(distance))
-            drive_forward(distance)
+            return drive_forward(distance)
         elif action == "backward":
             print("Driving backward {} cm".format(distance))
-            drive_backward(distance)
+            return drive_backward(distance)
         elif action == "left":
             print("Turning left {} degrees".format(distance))
-            turn_left(distance)
+            return turn_left(distance)
         elif action == "right":
             print("Turning right {} degrees".format(distance))
-            turn_right(distance)
+            return turn_right(distance)
     else:
-        print("Invalid command or format.")
+        return "Invalid command or format."
