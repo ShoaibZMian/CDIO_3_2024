@@ -1,35 +1,31 @@
 from time import sleep
 from abclasses import DecisionMakerABC # type: ignore
 import status_printer as sp # type: ignore
+from image_data import ImageData # type: ignore
 
 class DecisionMaker(DecisionMakerABC):
-    def __init__(self, image_stack, condition):
-        self.image_stack = image_stack
+    def __init__(self, shared_image, condition):
+        self.shared_image = shared_image
+        self.current_image = ImageData()
         self.condition = condition
         self.messages = ["Waiting for image...",
                          "Calculating next move for image "]
-        self.current_image = -1
         sp.set_status(2, __class__.__name__, "Initialized")
 
     def start(self):
-        sp.set_status(2, __class__.__name__, "Waiting for image...")
-        while True:
-            with self.condition:
-                while len(self.image_stack) < 1:
-                    self.condition.wait()
-        
-            self.current_image = self.image_stack.pop()
-            sp.set_status(2, __class__.__name__, self.messages[1] + str(self.current_image))
+        pass
 
     def start_demo(self):
         sp.set_status(2, __class__.__name__, "Waiting for image...")
         while True:
             with self.condition:
-                while len(self.image_stack) < 1:
+                if self.shared_image.num == -1:
                     self.condition.wait()
-        
-            self.current_image = self.image_stack.pop()
-            sp.set_status(2, __class__.__name__, self.messages[1] + str(self.current_image))
-            sleep(5)
+    
+                self.current_image.num = self.shared_image.num
+                self.shared_image.num = -1
+
+            sp.set_status(2, __class__.__name__, self.messages[1] + str(self.current_image.num))
+            sleep(4)
 
 
