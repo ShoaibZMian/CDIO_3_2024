@@ -4,5 +4,8 @@
 *.jpg
 *.mp4
 *.png
+*.pt
 .DS_Store
 __pycache__/
+image_detection/data
+
