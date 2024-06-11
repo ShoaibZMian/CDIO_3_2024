@@ -5,6 +5,8 @@ import math
 import time
 import torch
 
+global_distance = 0
+
 
 def show_img():
     img_path = "/Users/matt/CDIO_3_2024/image_detection/data/small dataset/train/images/WIN_20240313_09_24_04_Pro_mp4-0002_jpg.rf.fb71d3f1dd2e7327ede6b41f3be4e43a.jpg"
@@ -216,19 +218,16 @@ def show_webcam():
 
 
 def calculate_mapping(p1, p2, distance_between):
-    object_width_pixels = np.sqrt(
-        np.power((p1[0] - p2[0]), 2) + np.power((p1[1] - p2[1]), 2)
-    )
+    object_width_pixels = np.sqrt(np.power((p1[0] - p2[0]), 2) + np.power((p1[1] - p2[1]), 2))
 
     pixel_size_meters = distance_between / object_width_pixels
 
-    return pixel_size_meters
+    global global_distance
+    global_distance = pixel_size_meters
 
 
 def calculate_distance(p1, p2, pixel_size_meters):
-    distance_in_pixels = np.sqrt(
-        np.power((p1[0] - p2[0]), 2) + np.power((p1[1] - p2[1]), 2)
-    )
+    distance_in_pixels = np.sqrt(np.power((p1[0] - p2[0]), 2) + np.power((p1[1] - p2[1]), 2))
     result = distance_in_pixels * pixel_size_meters
     rounded_result = np.round(result, 3)
     return rounded_result
@@ -260,14 +259,14 @@ def video_object_tracking():
 
 
 def video_object_tracking_gpu():
-    model = YOLO("C:/Users/Shweb/Downloads/train4-20240608T153413Z-001.zip/train4/weights/best.pt")
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model.to(device)
+    model = YOLO("/Users/matt/Downloads/run_v9_n_50e_8b/weights/best.pt")
+    #device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    #model.to(device)
 
-    video_path = ("C:/Users/Shweb/Downloads/Filmm.mov")
+    video_path = (1)
     cap = cv2.VideoCapture(video_path)
 
-    class_names = ['back triangle', 'ball', 'borders', 'egg', 'front triangle', 'obstacle', 'orange ball', 'robot', 'small goal', 'white ball']
+    class_names = ['corner1', 'egg', 'obstacle', 'orange-golf-ball', 'robot', 'robot-back', 'robot-front', 'small-goal', 'white-golf-ball']
 
     ret = True
     while ret:
@@ -277,19 +276,35 @@ def video_object_tracking_gpu():
             results = model.track(frame, persist=True, conf=0.5, iou=0.3)
 
             #frame_ = results[0].plot()
-            cv2.putText(frame, f"Model is using: {device}", (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-
+            #cv2.putText(frame, f"Model is using: {device}", (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+            corners = 0
+            corner1_cord = 0
+            corner2_cord = 0
             for result in results:
                 if result.boxes is not None:
                     for obj in result.boxes:
+                        class_name = class_names[int(obj.cls[0])]
+
+                        if class_names == "corner1":
+                                cv2.putText(frame, "+ Corner", (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                                corners +=1
+                                if corners == 1:
+                                    corner1_cord = obj.xyxy[0]
+                                else:
+                                    corner2_cord = obj.xyxy[0]
+
+                        if corners == 2:
+                            cv2.putText(frame, "Mapping", (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                            calculate_mapping(corner1_cord, corner2_cord, 180)
+                        
                         x1, y1, x2, y2 = map(int, obj.xyxy[0])
                         label = obj.cls
                         confidence = obj.conf
-                        class_name = class_names[int(obj.cls[0])]
 
                         cX = (x1 + x2) // 2
                         cY = (y1 + y2) // 2
-                        text = f'Name: {class_name} Conf: {confidence} X={cX}, Y={cY}'
+                        #text = f'Name: {class_name} Conf: {confidence} X={cX}, Y={cY}'
+                        text = f'Map: {global_distance} Name: {class_name} X={cX}, Y={cY}'
                         text_position = (cX, cY - 10)
 
                         (text_width, text_height), baseline = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
@@ -306,14 +321,80 @@ def video_object_tracking_gpu():
     cap.release()
     cv2.destroyAllWindows()
 
+def calculate_triangle_mid(contours):
+    if not contours:
+        raise ValueError("Contours are empty")
+        return None
+    threshold = 20
+    max_x = float('-inf')
+    min_x = float('inf')
+    max_y = float('-inf')
+    min_y = float('inf')
+
+    max_x_coord = (0, 0)
+    min_x_coord = (0, 0)
+    max_y_coord = (0, 0)
+    min_y_coord = (0, 0)
+
+    # Iterate through all contours
+    for contour in contours:
+        # Iterate through all points in the contour
+        for point in contour:
+            # Get the x and y coordinates
+            x, y = point[0]  # point[0] gives the (x, y) coordinates
+            
+            # Update the max and min x values and their coordinates
+            if x > max_x:
+                max_x = x
+                max_x_coord = (x, y)
+            if x < min_x:
+                min_x = x
+                min_x_coord = (x, y)
+
+            # Update the max and min y values and their coordinates
+            if y > max_y:
+                max_y = y
+                max_y_coord = (x, y)
+            if y < min_y:
+                min_y = y
+                min_y_coord = (x, y)
+
+    # Collect all four coordinates
+    coords = [max_x_coord, min_x_coord, max_y_coord, min_y_coord]
+
+    # List to hold pairs of points that are close to each other
+    close_pairs = []
+
+    # Find pairs of points that are close to each other
+    for i in range(len(coords)):
+        for j in range(i + 1, len(coords)):
+            # Calculate the Euclidean distance directly
+            distance = np.sqrt((coords[i][0] - coords[j][0])**2 + (coords[i][1] - coords[j][1])**2)
+            close_pairs.append((coords[i], coords[j], distance))
+
+    # Find the closest pair of coordinates
+    if close_pairs:
+        closest_pair = min(close_pairs, key=lambda x: x[2])  # Find the pair with the smallest distance
+        coord_to_remove = closest_pair[1]  # Choose to remove the second coordinate in the closest pair
+        final_coords = [coord for coord in coords if coord != coord_to_remove]
+    else:
+        final_coords = coords
+
+    # Calculate the midpoint of the remaining three coordinates (centroid)
+    centroid_x = np.mean([coord[0] for coord in final_coords])
+    centroid_y = np.mean([coord[1] for coord in final_coords])
+
+    return (int(centroid_x), int(centroid_y))
+
+
 def object_detection_opencv():
-    video_path = ("C:/Users/Shweb/Downloads/Filmm.mov")
-    #video_path = (1)
+    video_path = (1)
     cap = cv2.VideoCapture(video_path)
 
     ball_id = 1
     border_id = 1
     purple_id = 1
+    green_id = 1
 
     while True:
         ret, frame = cap.read()
@@ -323,41 +404,40 @@ def object_detection_opencv():
         
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         
-        # Define the range for white color in HSV
+        # Define HSV range
         lower_white = np.array([0, 0, 200])
         upper_white = np.array([180, 70, 255])
-
-         # Define the range for red color in HSV
         lower_red1 = np.array([0, 120, 70])
         upper_red1 = np.array([10, 255, 255])
         lower_red2 = np.array([170, 120, 70])
         upper_red2 = np.array([180, 255, 255])
-
         lower_purple = np.array([130, 50, 50])
         upper_purple = np.array([160, 255, 255])
+        lower_green = np.array([35, 50, 50])
+        upper_green = np.array([85, 255, 255])
         
-        # Create a mask for the white color
+        # Create a masks
         mask_white = cv2.inRange(hsv, lower_white, upper_white)
-
-         # Create a mask for the red color (borders)
         mask_red1 = cv2.inRange(hsv, lower_red1, upper_red1)
         mask_red2 = cv2.inRange(hsv, lower_red2, upper_red2)
         mask_red = cv2.bitwise_or(mask_red1, mask_red2)
-
         mask_purple = cv2.inRange(hsv, lower_purple, upper_purple)
+        mask_green = cv2.inRange(hsv, lower_green, upper_green)
 
         # Morphological operations to clean up the mask
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
         mask_red = cv2.morphologyEx(mask_red, cv2.MORPH_CLOSE, kernel)
         mask_red = cv2.morphologyEx(mask_red, cv2.MORPH_OPEN, kernel)
-
         mask_purple = cv2.morphologyEx(mask_purple, cv2.MORPH_CLOSE, kernel)
         mask_purple = cv2.morphologyEx(mask_purple, cv2.MORPH_OPEN, kernel)
-        
+        mask_green = cv2.morphologyEx(mask_green, cv2.MORPH_CLOSE, kernel)
+        mask_green = cv2.morphologyEx(mask_green, cv2.MORPH_OPEN, kernel)
+
         # Find contours on the masked image
         contours_white, _ = cv2.findContours(mask_white, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours_red, _ = cv2.findContours(mask_red, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours_purple, _ = cv2.findContours(mask_purple, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
-        # Draw contours on the original frame
         for contour in contours_white:
             area = cv2.contourArea(contour)
             
@@ -378,70 +458,58 @@ def object_detection_opencv():
                         text = f" X: {x_c} Y: {y_c} Ball {ball_id}: Area: {area:.2f}, Circ: {circularity:.2f}, AR: {aspect_ratio:.2f}"
                         cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
                         ball_id += 1
-        
-        # Find contours on the red mask (borders)
-        contours_red, _ = cv2.findContours(mask_red, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        
-        for contour in contours_red:
-            area = cv2.contourArea(contour)
-            cv2.putText(frame, f"Area: {area}", (50, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-            
-            if area > 10:  # Adjust based on your needs
-                x, y, w, h = cv2.boundingRect(contour)
-                aspect_ratio = float(w) / h
-                cv2.putText(frame, f"A ratio: {aspect_ratio}", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
-                if 0.8 < aspect_ratio < 1.5:  # Assuming borders are square-like for the cross detection
-                    # Further analysis to ensure it's a cross
-                    rect = cv2.minAreaRect(contour)
-                    box = cv2.boxPoints(rect)
-                    box = np.array(box, dtype=np.int32)
-                    
-                    width = int(rect[1][0])
-                    height = int(rect[1][1])
-                    
-                    # Calculate the dimensions ratio
-                    ratio = width / height if width > height else height / width
-
-                    cv2.putText(frame, f"Ratio: {ratio}", (50, 65), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-                    
-                    if 1 < ratio < 3:  # Aspect ratio for cross shape (tweak as needed)
-                        cv2.drawContours(frame, [box], 0, (0, 0, 255), 2)
-                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 255), 2)
-
-                        for (corner_x, corner_y) in box:
-                            cv2.circle(frame, (corner_x-50, corner_y-50), 5, (0, 255, 0), -1)  # Adjust color and size as needed
-
-                        text = f"Border {border_id}: Area: {area:.2f}, AR: {aspect_ratio:.2f}"
-                        cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-                        border_id += 1
-
-        contours_purple, _ = cv2.findContours(mask_purple, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        purple_mid_cord = -1
+        if contours_purple:
+            purple_mid_cord = calculate_triangle_mid(contours_purple)
         
         for contour in contours_purple:
             area = cv2.contourArea(contour)
             
-            if area > 500:  # Adjust based on your needs
+            if area > 500:
                 x, y, w, h = cv2.boundingRect(contour)
                 aspect_ratio = float(w) / h
                 
-                if 0.8 < aspect_ratio < 1.2:  # Filter for approximately rectangular shapes
+                if 0.8 < aspect_ratio < 1.2:
                     cv2.drawContours(frame, [contour], -1, (255, 0, 255), 2)
                     cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), 2)
-
-                    # Draw a dot in every corner of the bounding box
-                    corners = [(x, y), (x + w, y), (x, y + h), (x + w, y + h)]
-                    cv2.circle(frame, (int(x+(w/2)), int(y+(h/2))), 5, (0, 0, 255), -1)  # Purple color for the dot
+                    cv2.circle(frame, purple_mid_cord, 3, (0, 0, 255), -1)
 
                     text = f"Purple {purple_id}: Area: {area:.2f}, AR: {aspect_ratio:.2f}"
                     cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
                     purple_id += 1
 
+        contours_green, _ = cv2.findContours(mask_green, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # Display the resulting frame
-        cv2.imshow('Detected Ping Pong Balls and Borders', frame)
+        green_mid_cord = -1
+        if contours_green:
+            green_mid_cord = calculate_triangle_mid(contours_green)
+
+        for contour in contours_green:
+            area = cv2.contourArea(contour)
+            
+            if area > 500:
+                x, y, w, h = cv2.boundingRect(contour)
+                aspect_ratio = float(w) / h
+                
+                if 0.8 < aspect_ratio < 1.2:
+                    cv2.drawContours(frame, [contour], -1, (255, 0, 255), 2)
+                    cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), 2)
+
+                    cv2.circle(frame, green_mid_cord, 3, (0, 0, 255), -1)
+
+                    text = f"Green {purple_id}: Area: {area:.2f}, AR: {aspect_ratio:.2f}"
+                    text_position = (x, y - 10)
+                    (text_width, text_height), baseline = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
+                    cv2.rectangle(frame, (text_position[0], text_position[1] - text_height - baseline), (text_position[0] + text_width, text_position[1] + baseline), (0, 0, 0), -1)
+                    cv2.putText(frame, text, (text_position[0],text_position[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                    green_id += 1
+
+        if purple_mid_cord and green_mid_cord != -1:
+                    cv2.line(frame, purple_mid_cord, green_mid_cord, (0, 0, 0), 3)
+
+        cv2.imshow('frame', frame)
         
-        # Break the loop on 'q' key press
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     cap.release()
@@ -449,4 +517,5 @@ def object_detection_opencv():
 
 #video_object_tracking_gpu()
 #object_detection_opencv()
-video_object_tracking()
+#video_object_tracking_gpu()
+object_detection_opencv()
