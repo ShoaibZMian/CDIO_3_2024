@@ -26,9 +26,8 @@ def drive_forward(distance_mm):
     distance_cm = distance_mm * 100
 
     while robot.distance() < distance_cm:
-        correction = gyro.angle()  # Negative feedback for correction
-        # correction = 0.5 * angle_error  # Apply proportional control to the correction
-        # correction = max(min(correction, 30), -30)
+        angle_error = gyro.angle()  # Negative feedback for correction
+        correction = 6 * angle_error  # Apply proportional control to the correction
 
         robot.drive(400, correction)
 
@@ -50,15 +49,22 @@ def drive_backward(distance_mm):
     right_motor.brake()
     return "Driven backward mm"
 
-def turn_right(degrees):
+def turn_left(degrees):
     gyro.reset_angle(0)
     initial_angle = gyro.angle()
     target_angle = initial_angle - degrees
     while gyro.angle() > target_angle:
         robot.drive(0, 150)
     robot.stop()
-    text = "Turned right {} degrees".format(gyro.angle())
+    text = "Turned left {} degrees".format(gyro.angle())
     return text
 
-def turn_left(degrees):
-    return "Turned left degrees"
+def turn_right(degrees):
+    gyro.reset_angle(0)
+    initial_angle = gyro.angle()
+    target_angle = initial_angle + degrees
+    while gyro.angle() < target_angle:
+        robot.drive(0, -150)  # Notice the negative value for turning left
+    robot.stop()
+    text = "Turned right {} degrees".format(gyro.angle())
+    return text
