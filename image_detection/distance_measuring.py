@@ -260,14 +260,14 @@ def video_object_tracking():
 
 
 def video_object_tracking_gpu():
-    model = YOLO("C:/Users/Shweb/Downloads/train4-20240608T153413Z-001.zip/train4/weights/best.pt")
+    model = YOLO("C:/DTU/CDIO_3_2024/image_detection/best.pt")
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model.to(device)
 
-    video_path = ("C:/Users/Shweb/Downloads/Filmm.mov")
+    video_path = (0)
     cap = cv2.VideoCapture(video_path)
 
-    class_names = ['back triangle', 'ball', 'borders', 'egg', 'front triangle', 'obstacle', 'orange ball', 'robot', 'small goal', 'white ball']
+    class_names = ['corner1', 'egg', 'obstacle', 'orange-golf-ball', 'robot', 'robot-back', 'robot-front', 'small-goal', 'white-golf-ball']
 
     ret = True
     while ret:
@@ -447,6 +447,6 @@ def object_detection_opencv():
     cap.release()
     cv2.destroyAllWindows()
 
-#video_object_tracking_gpu()
+video_object_tracking_gpu()
 #object_detection_opencv()
-video_object_tracking()
+#video_object_tracking()

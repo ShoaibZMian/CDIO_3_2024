@@ -7,5 +7,6 @@
 *.pt
 .DS_Store
 __pycache__/
+image_detection/__pycache__/
 image_detection/data
 
