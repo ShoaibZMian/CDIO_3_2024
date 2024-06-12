@@ -39,8 +39,6 @@ def drive_forward(distance_mm):
     text = "Final angle deviation: {} degrees".format(final_angle)
     return text
 
-
-
 def drive_backward(distance_mm):
     while robot.distance() > -distance_mm:
         robot.drive(-400, 0)
