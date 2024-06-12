@@ -1,7 +1,11 @@
 import socket
 
 def send_command(command):
+<<<<<<< HEAD
     target_host = "172.20.10.2"
+=======
+    target_host = "172.20.10.4"
+>>>>>>> develop
     target_port = 8080
 
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
