@@ -7,3 +7,4 @@
 *.pt
 .DS_Store
 image_detection/data
+__pycache__
