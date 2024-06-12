@@ -15,50 +15,56 @@ left_motor = Motor(Port.B)
 right_motor = Motor(Port.C)
 
 # Constants
-WHEEL_DIAMETER = 50.3  # Hjulets størrelse i mm
-AXEL_TRACK = 170  # Distancen mellem hjulene
+WHEEL_DIAMETER = 56  # Hjulets størrelse i mm
+AXEL_TRACK = 145  # Distancen mellem hjulene
 
 robot = DriveBase(left_motor, right_motor, WHEEL_DIAMETER, AXEL_TRACK)
 
 def drive_forward(distance_mm):
     gyro.reset_angle(0)
     robot.reset()
-    distance_cm = distance_mm * 100
-
-    while robot.distance() < distance_cm:
+   
+    while robot.distance() < distance_mm:
         correction = gyro.angle()  # Negative feedback for correction
         # correction = 0.5 * angle_error  # Apply proportional control to the correction
         # correction = max(min(correction, 30), -30)
 
-        robot.drive(400, correction)
+        robot.drive(250, correction)# hastigheden må ikke ændres, da længden vil blive upræcis
 
     robot.stop()
     left_motor.brake()
     right_motor.brake()
-
 
     final_angle = gyro.angle()
     text = "Final angle deviation: {} degrees".format(final_angle)
     return text
 
+
+
 def drive_backward(distance_mm):
     while robot.distance() > -distance_mm:
         robot.drive(-400, 0)
-
     robot.stop()
     left_motor.brake()
     right_motor.brake()
-    return "Driven backward mm"
+    return "Driven backward "+ distance_mm +"mm"
 
 def turn_right(degrees):
     gyro.reset_angle(0)
     initial_angle = gyro.angle()
     target_angle = initial_angle - degrees
     while gyro.angle() > target_angle:
-        robot.drive(0, 150)
+        robot.drive(0, 80)
     robot.stop()
     text = "Turned right {} degrees".format(gyro.angle())
     return text
 
 def turn_left(degrees):
-    return "Turned left degrees"
+    gyro.reset_angle(0)
+    initial_angle = gyro.angle()
+    target_angle = initial_angle + degrees
+    while gyro.angle() < target_angle:
+        robot.drive(0, -80)
+    robot.stop()
+    text = "Turned left {} degrees".format(gyro.angle())
+    return text
