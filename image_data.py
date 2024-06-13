@@ -3,6 +3,7 @@ class ProcessedImageData():
         self.is_fresh: bool = False
         self.id = 0
         self.tracked_objects: list[TrackedObject] = list[TrackedObject]()
+        self.frame = None
 
 class TrackedObject:
     def __init__(self, object_type, contour, centroid):

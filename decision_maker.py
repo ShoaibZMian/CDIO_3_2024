@@ -43,8 +43,9 @@ class DecisionMaker(DecisionMakerABC):
         while True:
             with self.condition:
                 if not self.shared_processed_image.is_fresh:
+                    sp.set_status(2, __class__.__name__, self.messages[0])
                     self.condition.wait()
-    
+
                 self.current_processed_image = self.shared_processed_image
                 self.shared_processed_image.is_fresh = False
 

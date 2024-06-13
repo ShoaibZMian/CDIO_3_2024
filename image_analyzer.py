@@ -18,7 +18,6 @@ class ImageAnalyzer(ImageAnalyzerABC):
         sp.set_status(3, __class__.__name__, "Initialized")
 
     def start(self):
-        print("starting")
         object_detection_opencv(self.shared_processed_image, self.condition)
 
     def start_demo(self):

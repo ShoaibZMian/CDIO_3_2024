@@ -7,6 +7,8 @@ from collections import deque
 #import keyboard
 import utils.status_printer as sp
 from image_data import ProcessedImageData
+import cv2
+import time
 
 
 # set quit hotkey    
@@ -28,6 +30,20 @@ t_dm = Thread(target=dm.start)
 
 t_ia.start()
 t_dm.start()
+
+time.sleep(5)
+# clear terminal
+os.system('cls' if os.name == 'nt' else 'clear') 
+# hide cursor at end of line
+print('\033[?25l', end="")
+while True:
+    cv2.imshow('Tracked Objects', shared_image.frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+    
+cv2.destroyAllWindows()
+
 
 t_ia.join()
 t_dm.join()

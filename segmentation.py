@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from image_data import ProcessedImageData, TrackedObject
-
+import utils.status_printer as sp
 
 def closest_object(processed_image):
     closest_distance = float('inf')
@@ -66,8 +66,8 @@ def detect_objects(frame):
     upper_red2 = np.array([180, 255, 255])
     lower_purple = np.array([130, 50, 50])
     upper_purple = np.array([160, 255, 255])
-    lower_green = np.array([35, 50, 50])
-    upper_green = np.array([85, 255, 255])
+    lower_green = np.array([25, 20, 20])
+    upper_green = np.array([90, 255, 255])
     
     # Create masks
     mask_white = cv2.inRange(hsv, lower_white, upper_white)
@@ -129,21 +129,28 @@ def detect_objects(frame):
     return detected_objects
 
 def object_detection_opencv(shared_processed_image, condition):
-    video_path = 0  # Adjust this as needed for your video source
+    video_path = 1  # Adjust this as needed for your video source
     cap = cv2.VideoCapture(video_path)
     
     image_id: int = 1
     result: ProcessedImageData = shared_processed_image
     tracked_objects: list[TrackedObject] = []
-
     while True:
         ret, frame = cap.read()
         if not ret:
             print("Error: Could not read frame.")
             break
 
+        sp.set_status(3, "RobotController", f"Working on image: {image_id}")
+
         detected_objects = detect_objects(frame)
         update_processed_image(tracked_objects, detected_objects, distance_threshold=20)
+
+        closest_obj = closest_object(tracked_objects)
+        text = f"{id(closest_obj)}"
+        (text_width, text_height), baseline = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+        cv2.rectangle(frame, (50, 50 - text_height - baseline),(50 + text_width, 50 + baseline), (0, 0, 0), -1)
+        cv2.putText(frame, text, (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1)
 
         # Draw the tracked objects
         for obj in tracked_objects:
@@ -169,14 +176,10 @@ def object_detection_opencv(shared_processed_image, condition):
             result.id = image_id
             result.is_fresh = True
             result.tracked_objects = tracked_objects
+            result.frame = frame
 
         image_id += 1
-        print("before")
-        cv2.imshow('Tracked Objects', frame)
-        print("after")
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-    
-    cap.release()
-    cv2.destroyAllWindows()
+        # cv2.imshow('Tracked Objects', frame)
+        # if cv2.waitKey(1) & 0xFF == ord('q'):
+        #     break
