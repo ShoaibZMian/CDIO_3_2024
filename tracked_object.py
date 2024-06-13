@@ -1,9 +1,3 @@
-class ProcessedImageData():
-    def __init__(self):
-        self.is_fresh: bool = False
-        self.id = 0
-        self.tracked_objects: list[TrackedObject] = list[TrackedObject]()
-
 class TrackedObject:
     def __init__(self, object_type, contour, centroid):
         self.object_type = object_type

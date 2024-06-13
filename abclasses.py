@@ -19,5 +19,5 @@ class DecisionMakerABC(ABC):
 class RobotControllerABC(ABC):
 
     @abstractmethod
-    def start():
+    def send_move() -> int:
         pass
