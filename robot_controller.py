@@ -7,7 +7,7 @@ class RobotController(RobotControllerABC):
                 "Executing commands"]
     def __init__(self):
         sp.set_status(1, __class__.__name__, self.messages[0], 1)
-        target_host = "172.20.10.4"
+        target_host = "0.0.0.0"
         target_port = 8080
 
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
