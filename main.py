@@ -4,13 +4,13 @@ from image_analyzer import ImageAnalyzer
 from decision_maker import DecisionMaker
 from threading import Thread, Condition
 from collections import deque
-import keyboard
+#import keyboard
 import utils.status_printer as sp
 from image_data import ProcessedImageData
 
 
 # set quit hotkey    
-keyboard.add_hotkey('q', lambda: os._exit(1))
+#keyboard.add_hotkey('q', lambda: os._exit(1))
 
 # clear terminal
 os.system('cls' if os.name == 'nt' else 'clear') 
