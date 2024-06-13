@@ -1,9 +1,6 @@
-from ultralytics import YOLO
 import cv2
 import numpy as np
 import math
-import time
-import torch
 
 global_distance = 0
 
@@ -72,13 +69,13 @@ def calculate_triangle_mid(contours):
 
     return (int(centroid_x), int(centroid_y))
 
-
 class TrackedObject:
-    def __init__(self, object_type, contour, centroid):
+    def __init__(self, object_type, contour, centroid, circularityShape):
         self.object_type = object_type
         self.contour = contour
         self.centroid = centroid
-        self.last_seen = 0  # Frames since last seen
+        self.last_seen = 0  # Frames since last seen'
+        self.circularityShape = circularityShape
 
 def calculate_centroid(contour):
     M = cv2.moments(contour)
@@ -120,78 +117,120 @@ def detect_objects(frame):
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     
     # Define HSV ranges
-    lower_white = np.array([0, 0, 200])
-    upper_white = np.array([180, 70, 255])
-    lower_red1 = np.array([0, 120, 70])
-    upper_red1 = np.array([10, 255, 255])
-    lower_red2 = np.array([170, 120, 70])
-    upper_red2 = np.array([180, 255, 255])
+    lower_white_ball = np.array([0, 0, 190])
+    upper_white_ball = np.array([180, 70, 255])
+    lower_white_egg = np.array([0, 0, 190])
+    upper_white_egg = np.array([180, 70, 255])
+    lower_orange = np.array([10, 100, 100])
+    upper_orange = np.array([25, 255, 255])
     lower_purple = np.array([130, 50, 50])
     upper_purple = np.array([160, 255, 255])
-    lower_green = np.array([35, 50, 50])
+    lower_green = np.array([25, 50, 50])
     upper_green = np.array([85, 255, 255])
     
     # Create masks
-    mask_white = cv2.inRange(hsv, lower_white, upper_white)
-    mask_red1 = cv2.inRange(hsv, lower_red1, upper_red1)
-    mask_red2 = cv2.inRange(hsv, lower_red2, upper_red2)
-    mask_red = cv2.bitwise_or(mask_red1, mask_red2)
+    mask_white_ball = cv2.inRange(hsv, lower_white_ball, upper_white_ball)
+    mask_white_egg = cv2.inRange(hsv, lower_white_egg, upper_white_egg)
+    mask_orange = cv2.inRange(hsv, lower_orange, upper_orange)
     mask_purple = cv2.inRange(hsv, lower_purple, upper_purple)
     mask_green = cv2.inRange(hsv, lower_green, upper_green)
 
     # Morphological operations
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-    mask_white = cv2.morphologyEx(mask_white, cv2.MORPH_CLOSE, kernel)
-    mask_white = cv2.morphologyEx(mask_white, cv2.MORPH_OPEN, kernel)
-    mask_red = cv2.morphologyEx(mask_red, cv2.MORPH_CLOSE, kernel)
-    mask_red = cv2.morphologyEx(mask_red, cv2.MORPH_OPEN, kernel)
+    mask_white_ball = cv2.morphologyEx(mask_white_ball, cv2.MORPH_CLOSE, kernel)
+    mask_white_ball = cv2.morphologyEx(mask_white_ball, cv2.MORPH_OPEN, kernel)
+    mask_white_egg = cv2.morphologyEx(mask_white_egg, cv2.MORPH_CLOSE, kernel)
+    mask_white_egg = cv2.morphologyEx(mask_white_egg, cv2.MORPH_OPEN, kernel)
+    mask_orange = cv2.morphologyEx(mask_orange, cv2.MORPH_CLOSE, kernel)
+    mask_orange = cv2.morphologyEx(mask_orange, cv2.MORPH_OPEN, kernel)
     mask_purple = cv2.morphologyEx(mask_purple, cv2.MORPH_CLOSE, kernel)
     mask_purple = cv2.morphologyEx(mask_purple, cv2.MORPH_OPEN, kernel)
     mask_green = cv2.morphologyEx(mask_green, cv2.MORPH_CLOSE, kernel)
     mask_green = cv2.morphologyEx(mask_green, cv2.MORPH_OPEN, kernel)
 
     # Find contours for each mask
-    contours_white, _ = cv2.findContours(mask_white, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours_white_ball, _ = cv2.findContours(mask_white_ball, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours_white_egg, _ = cv2.findContours(mask_white_egg, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours_orange, _ = cv2.findContours(mask_orange, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours_purple, _ = cv2.findContours(mask_purple, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours_green, _ = cv2.findContours(mask_green, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    for contour in contours_white:
+    # Get frame dimensions
+    height, width = frame.shape[:2]
+    small_corners = []
+    for contour in contours_white_ball:
         area = cv2.contourArea(contour)
-        if 450 < area < 1000:
+        if 30 < area < 300:  # Lowered minimum area threshold
+            perimeter = cv2.arcLength(contour, True)
+            circularity = 4 * np.pi * (area / (perimeter * perimeter))
+            if 0.6 < circularity < 1.2:  # More stringent circularity check
+                x, y, w, h = cv2.boundingRect(contour)
+                aspect_ratio = float(w) / h
+                if 0.8 < aspect_ratio < 1.2 and x > 10 and y > 10 and x + w < width - 10 and y + h < height - 10:
+                    centroid = calculate_centroid(contour)
+                    if centroid:
+                      detected_objects.append(TrackedObject('ball', contour, centroid, circularity))
+
+    
+    
+    for contour in contours_white_egg:
+        area = cv2.contourArea(contour)
+        if 300 < area < 1000:
             perimeter = cv2.arcLength(contour, True)
             circularity = 4 * np.pi * (area / (perimeter * perimeter))
             if 0.4 < circularity < 1.2:
                 x, y, w, h = cv2.boundingRect(contour)
                 aspect_ratio = float(w) / h
-                if 0.8 < aspect_ratio < 1.2:
+                if (aspect_ratio < 0.8 or aspect_ratio > 1.2) and x > 10 and y > 10 and x + w < width - 10 and y + h < height - 10:
                     centroid = calculate_centroid(contour)
                     if centroid:
-                        detected_objects.append(TrackedObject('ball', contour, centroid))
+                        detected_objects.append(TrackedObject('egg', contour, centroid, circularity))
+
+    for contour in contours_orange:
+        area = cv2.contourArea(contour)
+        if 30 < area < 300:  # Lowered minimum area threshold
+            perimeter = cv2.arcLength(contour, True)
+            circularity = 4 * np.pi * (area / (perimeter * perimeter))
+            if 0.6 < circularity < 1.2:  # More stringent circularity check
+                x, y, w, h = cv2.boundingRect(contour)
+                aspect_ratio = float(w) / h
+                if 0.8 < aspect_ratio < 1.2 and x > 10 and y > 10 and x + w < width - 10 and y + h < height - 10:
+                    centroid = calculate_centroid(contour)
+                    if centroid:
+                        detected_objects.append(TrackedObject('orange ball', contour, centroid, circularity))
+
+  
 
     for contour in contours_purple:
         area = cv2.contourArea(contour)
-        if area > 500:
+        if area > 0:
             x, y, w, h = cv2.boundingRect(contour)
             aspect_ratio = float(w) / h
             if 0.8 < aspect_ratio < 1.2:
                 centroid = calculate_centroid(contour)
                 if centroid:
-                    detected_objects.append(TrackedObject('purple', contour, centroid))
+                    detected_objects.append(TrackedObject('purple', contour, centroid, None))
+
+
+
+
 
     for contour in contours_green:
         area = cv2.contourArea(contour)
-        if area > 500:
+        if area > 0:
             x, y, w, h = cv2.boundingRect(contour)
             aspect_ratio = float(w) / h
             if 0.8 < aspect_ratio < 1.2:
                 centroid = calculate_centroid(contour)
                 if centroid:
-                    detected_objects.append(TrackedObject('green', contour, centroid))
-
+                    detected_objects.append(TrackedObject('green', contour, centroid, None))
     return detected_objects
 
+    
+   
+
 def object_detection_opencv():
-    video_path = 1  # Adjust this as needed for your video source
+    video_path = 0  # Adjust this as needed for your video source
     cap = cv2.VideoCapture(video_path)
     
     tracked_objects = []
@@ -210,13 +249,18 @@ def object_detection_opencv():
             x, y, w, h = cv2.boundingRect(obj.contour)
             if obj.object_type == 'ball':
                 color = (0, 255, 0)  # Green for balls
+            elif obj.object_type == 'orange':
+                color = (0, 165, 255)  # Orange for orange objects
             elif obj.object_type == 'purple':
                 color = (255, 0, 255)  # Purple for purple objects
             elif obj.object_type == 'green':
                 color = (0, 255, 255)  # Yellow-green for green objects
+            elif obj.object_type == 'egg':
+                color = (252, 252, 252)  # White for eggs
+        
 
             cv2.rectangle(frame, (x, y), (x + w, y + h), color, 1)
-            text = f"{obj.object_type}: {id(obj)}"
+            text = f"{obj.object_type}: {id(obj)}: {cv2.contourArea(obj.contour)}:{obj.circularityShape} "
             (text_width, text_height), baseline = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
             text_position = (x, y - 10)
 
