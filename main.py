@@ -37,15 +37,13 @@ os.system('cls' if os.name == 'nt' else 'clear')
 # hide cursor at end of line
 print('\033[?25l', end="")
 while True:
-    cv2.imshow('Tracked Objects', shared_image.frame)
+    if shared_image.frame is not None:
+        cv2.imshow('Tracked Objects', shared_image.frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-
-    
-cv2.destroyAllWindows()
-
 
 t_ia.join()
 t_dm.join()
 
+cv2.destroyAllWindows()
 print("Tasks finished!")
