@@ -1,4 +1,8 @@
 from drivefunc import drive_forward, drive_backward, turn_left, turn_right
+<<<<<<< Updated upstream
+=======
+from robotManager import move_to_ball  # Import move_to_ball function
+>>>>>>> Stashed changes
 import re
 
 def parse_and_execute(command):
