@@ -68,4 +68,3 @@ def turn_left(degrees):
     robot.stop()
     text = "Turned left {} degrees".format(gyro.angle())
     return text
-#hej
