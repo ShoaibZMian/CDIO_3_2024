@@ -5,7 +5,7 @@ import subprocess
 from commandparser import parse_and_execute
 
 bind_ip = "172.20.10.4"
-bind_port = 8080  
+bind_port = 8080
 
 # create and bind a new socket
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -18,9 +18,16 @@ def clientHandler(client_socket):
     client_socket.send("ready".encode())
     
     request = client_socket.recv(1024)
-    print("Received \"" + request.decode() + "\" from client")
+    print('Received "' + request.decode() + '" from client')
     command = request.decode()
-    parse_and_execute(command)
+    
+    # Get the result from the command execution
+    result = parse_and_execute(command)
+    
+    # Send the result back to the client
+    client_socket.send(result.encode())
+    client_socket.close()
+
 
 while True:
     # wait for client to connect
