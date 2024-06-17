@@ -85,13 +85,13 @@ def main(model_path, data_yaml_path, video_path, conf_thresholds):
 if __name__ == "__main__":
     model_path = "C:/Users/Shweb/Downloads/best.v12/best.v12/best.pt"
     data_yaml_path = "C:/Users/Shweb/Downloads/cdio3.v12i.yolov8/data.yaml"
-    video_path = 1  # Or use 0 for webcam
+    video_path = 1  # webcam 0 or 1 or "video file path"
 
     # Define confidence thresholds for specific items
     conf_thresholds = {
-        'white-golf-ball': 0.4,  # Higher threshold for this item
-        'robot-front': 0.25,     # Default threshold
-        'robot-back': 0.25,      # Default threshold
+        'white-golf-ball': 0.4,  
+        'robot-front': 0.25,     
+        'robot-back': 0.25,      
         'egg': 0.70, 
         
     }
