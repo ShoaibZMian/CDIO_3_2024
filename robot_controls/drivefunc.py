@@ -49,22 +49,23 @@ def drive_backward(distance_mm):
     right_motor.brake()
     return "Driven backward "+ distance_mm +"mm"
 
-def turn_right(degrees):
-    gyro.reset_angle(0)
-    initial_angle = gyro.angle()
-    target_angle = initial_angle - degrees
-    while gyro.angle() > target_angle:
-        robot.drive(0, 80)
-    robot.stop()
-    text = "Turned right {} degrees".format(gyro.angle())
-    return text
-
-def turn_left(degrees):
+def turn(degrees):
+    # Ensure the degrees are within the range of -365 to 365
+    if degrees > 365 or degrees < -365:
+        return "Error: Degrees must be between -365 and 365"
+    
     gyro.reset_angle(0)
     initial_angle = gyro.angle()
     target_angle = initial_angle + degrees
-    while gyro.angle() < target_angle:
-        robot.drive(0, -80)
+    
+    if degrees > 0:
+        while gyro.angle() < target_angle:
+            robot.drive(0, -80)  # Turning left
+    elif degrees < 0:
+        while gyro.angle() > target_angle:
+            robot.drive(0, 80)  # Turning right
+    
     robot.stop()
-    text = "Turned left {} degrees".format(gyro.angle())
+    text = "Turned {} degrees".format(degrees)
     return text
+
