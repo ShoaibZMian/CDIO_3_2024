@@ -4,12 +4,8 @@ import threading
 import subprocess
 from commandparser import parse_and_execute
 
-<<<<<<< HEAD
-bind_ip = "172.20.10.2"
-=======
-bind_ip = "172.20.10.4"
->>>>>>> develop
-bind_port = 8080
+bind_ip = "192.168.8.139"
+bind_port = 8080  
 
 # create and bind a new socket
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -20,17 +16,11 @@ print("Server is listening on %s:%d" % (bind_ip, bind_port))
 
 def clientHandler(client_socket):
     client_socket.send("ready".encode())
+    
     request = client_socket.recv(1024)
-    print('Received "' + request.decode() + '" from client')
+    print("Received \"" + request.decode() + "\" from client")
     command = request.decode()
-    
-    # Get the result from the command execution
-    result = parse_and_execute(command)
-    
-    # Send the result back to the client
-    client_socket.send(result.encode())
-    client_socket.close()
-
+    parse_and_execute(command)
 
 while True:
     # wait for client to connect
