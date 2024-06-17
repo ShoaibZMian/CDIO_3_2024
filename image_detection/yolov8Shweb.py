@@ -9,7 +9,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from robot_controls.robotManager import robot_process_items
 
-
 def load_yaml(yaml_path):
     with open(yaml_path, 'r') as file:
         return yaml.safe_load(file)
@@ -19,7 +18,7 @@ def calculate_center(x1, y1, x2, y2):
     center_y = (y1 + y2) / 2
     return int(center_x), int(center_y)
 
-def main(model_path, data_yaml_path, video_path):
+def main(model_path, data_yaml_path, video_path, conf_thresholds):
     # Load model and data
     model = YOLO(model_path)
     data = load_yaml(data_yaml_path)
@@ -47,6 +46,12 @@ def main(model_path, data_yaml_path, video_path):
                 cls = int(classes[i])
                 conf = confidences[i]
 
+                # Apply confidence threshold for the specific class
+                item_name = data['names'][cls]
+                conf_threshold = conf_thresholds.get(item_name, 0.25)  # Default threshold if not specified
+                if conf < conf_threshold:
+                    continue
+
                 # Calculate center point
                 center_x, center_y = calculate_center(x1, y1, x2, y2)
 
@@ -55,8 +60,8 @@ def main(model_path, data_yaml_path, video_path):
                 cv2.circle(frame, (center_x, center_y), 5, (0, 0, 255), -1)
 
                 # Print the center point coordinates
-                print(f"Object class: {data['names'][cls]}, Confidence: {conf:.2f}, Center: ({center_x}, {center_y})")
-                add_item(data['names'][cls], center_x, center_y)
+                print(f"Object class: {item_name}, Confidence: {conf:.2f}, Center: ({center_x}, {center_y})")
+                add_item(item_name, center_x, center_y)
         
         items_scanned()
         update_closest_ball()
@@ -70,10 +75,9 @@ def main(model_path, data_yaml_path, video_path):
         # Display the frame
         cv2.imshow('Frame', frame)
 
-        # Press Q on keyboard to exits
+        # Press Q on keyboard to exit
         if cv2.waitKey(25) & 0xFF == ord('q'):
             break
-
 
     cap.release()
     cv2.destroyAllWindows()
@@ -82,4 +86,13 @@ if __name__ == "__main__":
     model_path = "C:/Users/Shweb/Downloads/best.v12/best.v12/best.pt"
     data_yaml_path = "C:/Users/Shweb/Downloads/cdio3.v12i.yolov8/data.yaml"
     video_path = 1  # Or use 0 for webcam
-    main(model_path, data_yaml_path, video_path)
+
+    # Define confidence thresholds for specific items
+    conf_thresholds = {
+        'white-golf-ball': 0.4,  # Higher threshold for this item
+        'robot-front': 0.25,     # Default threshold
+        'robot-back': 0.25,      # Default threshold
+        'egg': 0.70, 
+        
+    }
+    main(model_path, data_yaml_path, video_path, conf_thresholds)
