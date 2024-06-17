@@ -15,8 +15,8 @@ left_motor = Motor(Port.B)
 right_motor = Motor(Port.C)
 
 # Constants
-WHEEL_DIAMETER = 56  # Hjulets størrelse i mm
-AXEL_TRACK = 145  # Distancen mellem hjulene
+WHEEL_DIAMETER = 55 # Hjulets størrelse i mm
+AXEL_TRACK = 171  # Distancen mellem hjulene
 
 robot = DriveBase(left_motor, right_motor, WHEEL_DIAMETER, AXEL_TRACK)
 
