@@ -1,14 +1,20 @@
 from drivefunc import drive_forward, drive_backward, turn_left, turn_right
+from robot_controls.robotManager import move_to_ball  # Import move_to_ball function
 import re
 
 def parse_and_execute(command):
     """
-    Parses the given command and executes the corresponding function from drivefunc.py
+    Parses the given command and executes the corresponding function from drivefunc.py or robotManager.py
 
-    The command format expected is 'actiondistance', e.g., 'forward10' or 'backward5'.
+    The command format expected is 'actiondistance', e.g., 'forward10', 'backward5', or 'moveball'.
 
     :param command: The command to parse and execute.
     """
+    # Check for the 'moveball' command
+    if command.lower() == "moveball":
+        print("Executing move_to_ball command")
+        return move_to_ball()
+    
     # Split the command into action and distance using regex
     parts = re.match(r'([a-z]+)(\d+)', command, re.I)
     if parts:

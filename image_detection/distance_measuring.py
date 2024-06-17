@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import math
+from itemManager import add_item, get_all_items, reset, update_closest_ball, items_scanned # ,get_item
 
 global_distance = 0
 
@@ -169,7 +170,8 @@ def detect_objects(frame):
                 if 0.8 < aspect_ratio < 1.2 and x > 10 and y > 10 and x + w < width - 10 and y + h < height - 10:
                     centroid = calculate_centroid(contour)
                     if centroid:
-                      detected_objects.append(TrackedObject('ball', contour, centroid, circularity))
+                        detected_objects.append(TrackedObject('ball', contour, centroid, circularity))
+                        add_item('ball', centroid[0], centroid[1])
 
     
     
@@ -210,6 +212,7 @@ def detect_objects(frame):
                 centroid = calculate_centroid(contour)
                 if centroid:
                     detected_objects.append(TrackedObject('purple', contour, centroid, None))
+                    add_item('robot_purple', centroid[0], centroid[1])
 
 
 
@@ -224,13 +227,14 @@ def detect_objects(frame):
                 centroid = calculate_centroid(contour)
                 if centroid:
                     detected_objects.append(TrackedObject('green', contour, centroid, None))
+                    add_item('robot_green', centroid[0], centroid[1])
     return detected_objects
 
     
    
 
 def object_detection_opencv():
-    video_path = 0  # Adjust this as needed for your video source
+    video_path = 1  # Adjust this as needed for your video source
     cap = cv2.VideoCapture(video_path)
     
     tracked_objects = []
@@ -268,6 +272,16 @@ def object_detection_opencv():
             cv2.rectangle(frame, (text_position[0], text_position[1] - text_height - baseline),(text_position[0] + text_width, text_position[1] + baseline), (0, 0, 0), -1)
             cv2.putText(frame, text, text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
             cv2.circle(frame, obj.centroid, 3, (0,0,0), 3)
+            
+            items_scanned()
+            update_closest_ball()
+            items = get_all_items()
+            print("Items ")
+            print(items) 
+
+            # call _robot(items)
+
+            reset()
 
         cv2.imshow('Tracked Objects', frame)
 
