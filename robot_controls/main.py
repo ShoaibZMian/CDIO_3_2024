@@ -4,7 +4,7 @@ import threading
 import subprocess
 from commandparser import parse_and_execute
 
-bind_ip = "192.168.8.139"
+bind_ip = "172.20.10.4"
 bind_port = 8080  
 
 # create and bind a new socket
