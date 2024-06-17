@@ -173,6 +173,7 @@ def detect_objects(frame):
 
     return detected_objects
 
+'''
 # Function to move the robot to a specific coordinate (x, y)
 def move_to_coordinate(target_x, target_y):
     current_x = 0  # Initial x coordinate
@@ -210,6 +211,7 @@ def move_to_coordinate(target_x, target_y):
     current_angle = target_angle
 
     return f"Moved to coordinate ({target_x}, {target_y})"
+'''
 
 # Function to integrate object detection and movement
 def detect_and_move_to_object():
