@@ -61,7 +61,7 @@ def move_to_ball(items):
     print(f"Adjusted angle: {adjusted_angle} degrees")
 
     # Convert distance to mm
-    distance_mm = distance * 37  # Assuming 1 unit = 37 mm, adjust if necessary
+    distance_mm = distance * 3,7  # Assuming 1 unit = 37 mm, adjust if necessary
 
     # Normalize the adjusted angle to the range [-180, 180]
     if adjusted_angle > 180:
