@@ -34,7 +34,12 @@ def robot_process_items(items):
 
 # Function to move the robot to the ball
 def move_to_ball(items):
-
+    required_items = ['robot-front', 'robot-back', 'white-golf-ball']
+    
+    if not all(item in items for item in required_items):
+        print("Required items not found in 'items'. Function will exit.")
+        return
+    
     robot_moving = True
     
     robot_green = items['robot-front']
@@ -61,7 +66,7 @@ def move_to_ball(items):
     print(f"Adjusted angle: {adjusted_angle} degrees")
 
     # Convert distance to mm
-    distance_mm = distance * 3,7  # Assuming 1 unit = 37 mm, adjust if necessary
+    distance_mm = distance * 3.7  # Assuming 1 unit = 37 mm, adjust if necessary
 
     # Normalize the adjusted angle to the range [-180, 180]
     if adjusted_angle > 180:

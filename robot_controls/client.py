@@ -82,15 +82,15 @@ def periodic_task(interval, function, *args, **kwargs):
 
 if __name__ == "__main__":
 
-    # Start start_yolo() in a new thread
-    yolo_thread = threading.Thread(target=start_yolo)
-    yolo_thread.start()
-
     # Start the periodic task in a new thread
     interval = 5  # 5 seconds
     periodic_thread = threading.Thread(target=periodic_task, args=(interval, start_robot_process_items))
     periodic_thread.daemon = True
     periodic_thread.start()
+
+    start_yolo()
+
+
 
     # while True:
     #     cmd = input(
