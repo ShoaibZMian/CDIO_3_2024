@@ -89,24 +89,3 @@ def get_prev_state_items():
  
 def items_scanned():
     item_manager.items_scanned()
- 
-# Example usage
-if __name__ == "__main__":
-    add_item('robot-front', 5, 5)
-    add_item('white-golf-ball', 10, 10)
-    add_item('white-golf-ball', 8, 8)
-    print(get_all_items())  # Before updating closest ball, should return new_state if items scanned
-    items_scanned()
-    print(get_all_items())  # Should show all items in new state
-    update_closest_ball()
-    print(get_all_items())  # Should update to the closest ball
-    add_item('white-golf-ball', 15, 15)
-    update_closest_ball()
-    print(get_all_items())  # Should still show the closest ball
-    add_item('white-golf-ball', 3, 3)
-    update_closest_ball()
-    print(get_all_items())  # Should update to the closest ball
- 
-    reset()
-    print(get_all_items())        # Output should be None as items are not scanned
-    print(get_prev_state_items()) # Output should contain the last state
