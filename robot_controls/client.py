@@ -70,6 +70,13 @@ def start_robot_process_items():
     items = get_all_items()
     print("\n".join([f"{time.time()}: {items}"]))
     reset()
+
+    # check that items has what is needed before calling the robot
+    required_items = ['robot-front', 'robot-back', 'white-golf-ball'] 
+    if not all(item in items for item in required_items): # type: ignore
+        print("Required items not found in 'items'. Function will exit.")
+        return
+
     robot_process_items(items)
 
 def periodic_task(interval, function, *args, **kwargs):

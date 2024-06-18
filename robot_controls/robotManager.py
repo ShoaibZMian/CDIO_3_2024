@@ -34,12 +34,6 @@ def robot_process_items(items):
 
 # Function to move the robot to the ball
 def move_to_ball(items):
-    required_items = ['robot-front', 'robot-back', 'white-golf-ball']
-    
-    if not all(item in items for item in required_items):
-        print("Required items not found in 'items'. Function will exit.")
-        return
-    
     robot_moving = True
     
     robot_green = items['robot-front']
