@@ -1,4 +1,26 @@
 import socket
+import sys
+import os
+import threading
+import time
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from image_detection.yolov8Shweb import yolo_init
+from image_detection.itemManager import get_all_items, reset
+from robot_controls.robotManager import robot_process_items
+
+
+yolo_model_path = "C:/Users/Mian/Desktop/bestv12/best.pt"
+yolo_data_yaml_path = "C:/Users/Mian/Desktop/bestv12/train_folder/cdio3.v12i.yolov8/data.yaml"
+yolo_video_path = "C:/Users/Mian/Downloads/filmm.mov"
+
+# Define confidence thresholds for specific items
+yolo_conf_thresholds = {
+    'white-golf-ball': 0.4,  
+    'robot-front': 0.25,     
+    'robot-back': 0.25,      
+    'egg': 0.70, 
+}
 
 def send_command(command):
     target_host = "172.20.10.4"
@@ -40,11 +62,40 @@ def send_command(command):
     finally:
         client.close()
 
-if __name__ == "__main__":
+
+def start_yolo():
+    yolo_init(yolo_model_path, yolo_data_yaml_path, yolo_video_path, yolo_conf_thresholds)
+
+def start_robot_process_items():
+    items = get_all_items()
+    print("\n".join([f"{time.time()}: {items}"]))
+    reset()
+    robot_process_items(items)
+
+def periodic_task(interval, function, *args, **kwargs):
+    """
+    Runs a function periodically with the given interval.
+    """
     while True:
-        cmd = input(
-            "Enter a command (e.g., 'forward10', 'backward20', or 'quit' to exit): "
-        )
-        if cmd.lower() == "quit":
-            break
-        send_command(cmd)
+        function(*args, **kwargs)
+        time.sleep(interval)
+
+if __name__ == "__main__":
+
+    # Start start_yolo() in a new thread
+    yolo_thread = threading.Thread(target=start_yolo)
+    yolo_thread.start()
+
+    # Start the periodic task in a new thread
+    interval = 5  # 5 seconds
+    periodic_thread = threading.Thread(target=periodic_task, args=(interval, start_robot_process_items))
+    periodic_thread.daemon = True
+    periodic_thread.start()
+
+    # while True:
+    #     cmd = input(
+    #         "Enter a command (e.g., 'forward10', 'backward20', or 'quit' to exit): "
+    #     )
+    #     if cmd.lower() == "quit":
+    #         break
+    #     send_command(cmd)
