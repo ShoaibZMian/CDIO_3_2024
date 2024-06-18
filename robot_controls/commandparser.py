@@ -23,7 +23,7 @@ def parse_and_execute(command):
     if action in ["forward", "backward", "turn", "toggle"]:
         if action == "toggle":
             print("toggle")
-            return toggle_rotate()
+            return toggle_rotate(distance)
         if action == "forward":
             print("Driving forward {} cm".format(distance))
             return drive_forward(distance)

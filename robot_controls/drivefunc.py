@@ -82,7 +82,7 @@ def turn(degrees):
     text = "Turned {} degrees".format(degrees)
     return text
 
-def toggle_rotate():
+def toggle_rotate(distance):
     print("Starting toggle_rotate function")
 
     if not toggle_motor:
