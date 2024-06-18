@@ -11,9 +11,12 @@ from itemManager import add_item, get_all_items, reset, update_closest_ball, ite
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 class DetectedObject:
-    def __init__(self, name, bbox, confidence):
+    def __init__(self, name, x1, y1, x2, y2, confidence):
         self.name = name
-        self.bbox = bbox  # Bounding box coordinates (x1, y1, x2, y2)
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x2
+        self.y2 = y2
         self.confidence = confidence
 
 def load_yaml(yaml_path):
@@ -24,54 +27,47 @@ def load_yaml(yaml_path):
 
 def draw_boxes(detected_objects, frame):
     for obj in detected_objects:
-        x1, y1, x2, y2 = obj.bbox
-        label = f"{obj.name} {obj.confidence:.2f}"
+        x1, y1, x2, y2 = obj.x1, obj.y1, obj.x2, obj.y2
+        #label = f"{obj.name} {obj.confidence:.2f}"
         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        cv2.putText(frame, "test", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
 import numpy as np  # Import numpy for dtype conversion if needed
 
-def update_list(detected_objects, result, threshold=10):
-    if result is not None:
-        if not detected_objects:
-            # If detected_objects list is empty, add all new detections
-            for detection in result:
-                bbox = detection.boxes  # Convert to numpy array and then to int
-                confidence = detection.confidence
-                name = detection.name
-                obj = DetectedObject(name, bbox, confidence)
-                detected_objects.append(obj)
+def update_list(detected_objects, results, threshold=10):
+    for result in results:
+        if result is not None:
+            for detected in result.boxes:
+                x1, y1, x2, y2 = map(int, detected.xyxy[0])
+                name = detected.cls
+                confidence = detected.conf
+                new_object = DetectedObject(name, x1, y1, x2, y2, confidence)
+                detected_objects.append(new_object)
         else:
-            # Update existing objects or add new detections
-            updated = False
-            for obj in detected_objects:
-                for detection in result:
-                    bbox = detection.boxes  # Convert to numpy array and then to int
-                    confidence = detection.confidence
-                    name = detection.name
-
+            for detected in result.boxes:
+                x1, y1, x2, y2 = map(int, detected.xyxy[0])
+                name = detected.cls
+                confidence = detected.conf
+                
+                updated = False
+                for existing in detected_objects:
                     # Check if the detected object matches the existing object within the threshold
-                    x1_diff = abs(obj.bbox[0] - bbox[0])
-                    y1_diff = abs(obj.bbox[1] - bbox[1])
-                    x2_diff = abs(obj.bbox[2] - bbox[2])
-                    y2_diff = abs(obj.bbox[3] - bbox[3])
+                    x1_diff = abs(existing.x1 - x1)
+                    y1_diff = abs(existing.y1 - y1)
+                    x2_diff = abs(existing.x2 - x2)
+                    y2_diff = abs(existing.y2 - y2)
 
                     if x1_diff <= threshold and y1_diff <= threshold and x2_diff <= threshold and y2_diff <= threshold:
                         # Update the existing object
-                        obj.bbox = bbox
-                        obj.confidence = confidence
+                        existing.x1, existing.y1, existing.x2, existing.y2 = x1, y1, x2, y2
+                        existing.confidence = confidence
                         updated = True
                         break
 
-                if updated:
-                    break
-            else:
-                # If no match found, add a new detection
-                bbox = detection.boxes  # Convert to numpy array and then to int
-                confidence = detection.confidence
-                name = detection.name
-                obj = DetectedObject(name, bbox, confidence)
-                detected_objects.append(obj)
+                if not updated:
+                    # If no match found, add a new detection
+                    new_object = DetectedObject(name, x1, y1, x2, y2, confidence)
+                    detected_objects.append(new_object)
 
 
 def image_recognition_thread(model_path, data_yaml_path, video_path, conf_thresholds, shared_list, list_lock, robot_ready, frame_queue):

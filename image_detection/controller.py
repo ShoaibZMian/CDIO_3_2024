@@ -10,9 +10,9 @@ list_lock = threading.Lock()
 robot_ready = threading.Condition()
 frame_queue = Queue()  # Queue for storing frames
 
-model_path = "/Users/matt/CDIO_3_2024/best.v12/best.v12/best.pt"
-data_yaml_path = "/Users/matt/CDIO_3_2024/best.v12/data.yaml"
-video_path = 0  # webcam 0 or 1 or "video file path"
+model_path = "C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v12/best.pt"
+data_yaml_path = "C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v12/data.yaml"
+video_path = "C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/test_video.mp4"
 conf_thresholds = {
     'white-golf-ball': 0.4,
     'robot-front': 0.25,
