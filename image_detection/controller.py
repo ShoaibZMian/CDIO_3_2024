@@ -12,7 +12,7 @@ frame_queue = Queue()  # Queue for storing frames
 
 model_path = "C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v12/best.pt"
 data_yaml_path = "C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v12/data.yaml"
-video_path = "C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/test_video.mp4"
+video_path = "C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/new_test_video_trimmed.mov"
 conf_thresholds = {
     'white-golf-ball': 0.4,
     'robot-front': 0.25,

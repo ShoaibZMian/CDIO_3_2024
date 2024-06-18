@@ -18,12 +18,18 @@ class DetectedObject:
         self.x2 = x2
         self.y2 = y2
         self.confidence = confidence
+        self.midpoint = calculate_midpoint(x1, y1, x2, y2)
 
-def load_yaml(yaml_path):
+def calculate_midpoint(x1,y1,x2,y2):
+    center_x = (x1 + x2) / 2
+    center_y = (y1 + y2) / 2
+    return int(center_x), int(center_y)
+
+def load_class_names(yaml_path):
     with open(yaml_path, 'r') as file:
-        return yaml.safe_load(file)
-    
-         
+        data = yaml.safe_load(file)
+    return data['names']
+            
 
 def draw_boxes(detected_objects, frame):
     for obj in detected_objects:
@@ -32,47 +38,23 @@ def draw_boxes(detected_objects, frame):
         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
         cv2.putText(frame, "test", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
-import numpy as np  # Import numpy for dtype conversion if needed
-
-def update_list(detected_objects, results, threshold=10):
+def update_list(detected_objects, results, class_names, threshold=10):
+    # Clear the list of detected objects at the beginning of each frame
+    detected_objects.clear()
+    
     for result in results:
         if result is not None:
             for detected in result.boxes:
                 x1, y1, x2, y2 = map(int, detected.xyxy[0])
-                name = detected.cls
+                class_index = int(detected.cls)
+                name = class_names[class_index]
                 confidence = detected.conf
                 new_object = DetectedObject(name, x1, y1, x2, y2, confidence)
                 detected_objects.append(new_object)
-        else:
-            for detected in result.boxes:
-                x1, y1, x2, y2 = map(int, detected.xyxy[0])
-                name = detected.cls
-                confidence = detected.conf
-                
-                updated = False
-                for existing in detected_objects:
-                    # Check if the detected object matches the existing object within the threshold
-                    x1_diff = abs(existing.x1 - x1)
-                    y1_diff = abs(existing.y1 - y1)
-                    x2_diff = abs(existing.x2 - x2)
-                    y2_diff = abs(existing.y2 - y2)
-
-                    if x1_diff <= threshold and y1_diff <= threshold and x2_diff <= threshold and y2_diff <= threshold:
-                        # Update the existing object
-                        existing.x1, existing.y1, existing.x2, existing.y2 = x1, y1, x2, y2
-                        existing.confidence = confidence
-                        updated = True
-                        break
-
-                if not updated:
-                    # If no match found, add a new detection
-                    new_object = DetectedObject(name, x1, y1, x2, y2, confidence)
-                    detected_objects.append(new_object)
-
 
 def image_recognition_thread(model_path, data_yaml_path, video_path, conf_thresholds, shared_list, list_lock, robot_ready, frame_queue):
     model = YOLO(model_path)
-    data = load_yaml(data_yaml_path)
+    class_names = load_class_names(data_yaml_path)
     cap = cv2.VideoCapture(video_path)
     
     if not cap.isOpened():
@@ -87,8 +69,8 @@ def image_recognition_thread(model_path, data_yaml_path, video_path, conf_thresh
 
         results = model(frame)
         
-        for result in results:
-            update_list(shared_list, result)
+        with list_lock:
+            update_list(shared_list, results, class_names)
 
         draw_boxes(shared_list, frame)
 
