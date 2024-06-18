@@ -8,7 +8,7 @@ from robot_controls.robot_client import robot_client_thread
 shared_list = []
 list_lock = threading.Lock()
 robot_ready = threading.Condition()
-frame_queue = Queue()  # Queue for storing frames
+frame_queue = Queue()
 
 model_path = "C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v12/best.pt"
 data_yaml_path = "C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v12/data.yaml"
@@ -32,18 +32,15 @@ def controller():
                 with robot_ready:
                     robot_ready.notify()
         
-        # Get the latest frame from the queue
         frame = get_latest_frame()
         if frame is not None:
             cv2.imshow('Frame', frame)
         
         if cv2.waitKey(25) & 0xFF == ord('q'):
             break
-        time.sleep(0.1)  # Adjust sleep time as necessary
 
 def get_latest_frame():
     try:
-        # Get the latest frame from the queue
         return frame_queue.get_nowait()
     except Exception as e:
         return None

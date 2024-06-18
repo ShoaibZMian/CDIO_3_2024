@@ -34,12 +34,11 @@ def load_class_names(yaml_path):
 def draw_boxes(detected_objects, frame):
     for obj in detected_objects:
         x1, y1, x2, y2 = obj.x1, obj.y1, obj.x2, obj.y2
-        #label = f"{obj.name} {obj.confidence:.2f}"
+        label = f"{obj.name} {obj.confidence:.2f}"
         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        cv2.putText(frame, "test", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
 def update_list(detected_objects, results, class_names, threshold=10):
-    # Clear the list of detected objects at the beginning of each frame
     detected_objects.clear()
     
     for result in results:
@@ -74,7 +73,6 @@ def image_recognition_thread(model_path, data_yaml_path, video_path, conf_thresh
 
         draw_boxes(shared_list, frame)
 
-        # Put the annotated frame into the queue
         frame_queue.put(frame)
 
     cap.release()
