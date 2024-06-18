@@ -9,6 +9,7 @@ def parse_and_execute(command):
 
     :param command: The command to parse and execute.
     """
+   
 
     # Split the command into action and distance using regex
     parts = re.match(r'([a-z]+)(-?\d+)', command, re.I)
@@ -20,9 +21,9 @@ def parse_and_execute(command):
     action = items[0].lower()
     distance = int(items[1])
 
-    if action in ["forward", "backward", "turn", "toggle"]:
+    if action in ["forward", "backward", "turn","toggle"]:
         if action == "toggle":
-            print("toggle")
+            print("toggle cm")
             return toggle_rotate(distance)
         if action == "forward":
             print("Driving forward {} cm".format(distance))
@@ -35,4 +36,3 @@ def parse_and_execute(command):
             return turn(distance)
     else:
         return "Invalid command or format."
-    

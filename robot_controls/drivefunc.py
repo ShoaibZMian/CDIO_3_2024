@@ -7,7 +7,6 @@ from pybricks.robotics import DriveBase
 
 import math
 
-
 ev3 = EV3Brick()
 
 left_motor = Motor(Port.B)
@@ -84,33 +83,12 @@ def turn(degrees):
     return text
 
 def toggle_rotate(distance):
-    print("Starting toggle_rotate function")
-
-    if not toggle_motor:
-        print("Toggle motor is not connected!")
-        return "Toggle motor not connected"
-
-    try:
-        print("Running motor to target position")
-        toggle_motor.run_target(500, 360, wait=False)
-        
-        # Wait until the motor stops
-        while not toggle_motor.done():
-            wait(10)  # Wait 10 ms
-
-        print("Motor run to target position complete")
-        
-        toggle_motor.brake()
-        print("Motor braked")
-
-        text = "Toggle motor rotated 360 degrees"
-        return text
-
-    except Exception as e:
-        # Handle and print the exception with proper formatting
-        print("An error occurred: {}".format(e))
-        return "Error occurred during motor operation: {}".format(e)
+    # Rotate the toggle motor 360 degrees
+    print("før motorstart")
+    toggle_motor.run_target(500, 360)
+    print("inde efter motor run target")
+    
+    text = "Toggle motor rotated 360 degrees"
+    return text
 
 # Example usage in the command parser
-
-print(toggle_rotate())
