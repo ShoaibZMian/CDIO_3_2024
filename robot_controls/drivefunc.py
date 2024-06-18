@@ -91,7 +91,7 @@ def toggle_rotate():
 
     try:
         print("Running motor to target position")
-        toggle_motor.run_target(500, 360)
+        toggle_motor.run_target(500, 360, wait=False)
         
         # Wait until the motor stops
         while not toggle_motor.done():
