@@ -1,14 +1,18 @@
-from drivefunc import drive_forward, drive_backward, turn
+from drivefunc import drive_forward, drive_backward, turn, toggle_rotate
 import re
 
 def parse_and_execute(command):
     """
     Parses the given command and executes the corresponding function from drivefunc.py or robotManager.py
 
-    The command format expected is 'actiondistance', e.g., 'forward10', 'backward5', 'turn90'.
+    The command format expected is 'actiondistance', e.g., 'forward10', 'backward5', 'turn90', or 'toggle'.
 
     :param command: The command to parse and execute.
     """
+    if command.lower() == "toggle":
+        print("toggle")
+        return toggle_rotate()
+
     # Split the command into action and distance using regex
     parts = re.match(r'([a-z]+)(-?\d+)', command, re.I)
     if parts:
@@ -31,3 +35,4 @@ def parse_and_execute(command):
             return turn(distance)
     else:
         return "Invalid command or format."
+    
