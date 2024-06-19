@@ -1,4 +1,4 @@
-from drivefunc import drive_forward, drive_backward, turn, toggle_rotate
+from drivefunc import drive, turn #toggle_rotate
 import re
 
 def parse_and_execute(command):
@@ -21,16 +21,13 @@ def parse_and_execute(command):
     action = items[0].lower()
     distance = int(items[1])
 
-    if action in ["forward", "backward", "turn","toggle"]:
-        if action == "toggle":
-            print("toggle cm")
-            return toggle_rotate(distance)
-        if action == "forward":
-            print("Driving forward {} cm".format(distance))
-            return drive_forward(distance)
-        elif action == "backward":
-            print("Driving backward {} cm".format(distance))
-            return drive_backward(distance)
+    if action in ["drive", "turn"]:
+       # if action == "toggle":
+        #    print("toggle cm")
+         #   return toggle_rotate(distance)
+        if action == "drive":
+            print("Driving {} cm".format(distance))
+            return drive(distance)
         elif action == "turn":
             print("Turning {} degrees".format(distance))
             return turn(distance)

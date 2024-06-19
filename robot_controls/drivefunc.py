@@ -11,7 +11,7 @@ ev3 = EV3Brick()
 
 left_motor = Motor(Port.B)
 right_motor = Motor(Port.C)
-toggle_motor = Motor(Port.A)
+#toggle_motor = Motor(Port.A)
 
 # Constants
 WHEEL_DIAMETER = 55  # Hjulets størrelse i mm
@@ -22,39 +22,26 @@ WHEEL_CIRCUMFERENCE = math.pi * WHEEL_DIAMETER
 
 robot = DriveBase(left_motor, right_motor, WHEEL_DIAMETER, AXEL_TRACK)
 
-def drive_forward(distance_mm):
+def drive(distance_mm):
+    # Determine the direction based on the sign of the distance
+    direction = 1 if distance_mm > 0 else -1
+
     # Calculate the number of motor degrees needed to drive the specified distance
-    rotations = distance_mm / WHEEL_CIRCUMFERENCE
+    rotations = abs(distance_mm) / WHEEL_CIRCUMFERENCE
     degrees = rotations * 360
 
     left_motor.reset_angle(0)
     right_motor.reset_angle(0)
 
-    left_motor.run_target(DRIVE_SPEED, degrees, wait=False)
-    right_motor.run_target(DRIVE_SPEED, degrees)
+    left_motor.run_target(DRIVE_SPEED * direction, degrees * direction, wait=False)
+    right_motor.run_target(DRIVE_SPEED * direction, degrees * direction)
 
     left_motor.brake()
     right_motor.brake()
 
-    text = "Driven forward {} mm".format(distance_mm)
+    text = "Driven {} mm".format(distance_mm)
     return text
 
-def drive_backward(distance_mm):
-    # Calculate the number of motor degrees needed to drive the specified distance
-    rotations = distance_mm / WHEEL_CIRCUMFERENCE
-    degrees = rotations * 360
-
-    left_motor.reset_angle(0)
-    right_motor.reset_angle(0)
-
-    left_motor.run_target(-DRIVE_SPEED, -degrees, wait=False)
-    right_motor.run_target(-DRIVE_SPEED, -degrees)
-
-    left_motor.brake()
-    right_motor.brake()
-
-    text = "Driven backward {} mm".format(distance_mm)
-    return text
 
 def turn(degrees):
     # Ensure the degrees are within the range of -365 to 365
@@ -64,17 +51,19 @@ def turn(degrees):
     # Calculate the number of motor degrees needed to turn the specified degrees
     turn_circumference = math.pi * AXEL_TRACK
     rotations = (degrees / 360) * turn_circumference / WHEEL_CIRCUMFERENCE
-    motor_degrees = rotations * 360
+    motor_degrees = abs(rotations * 360)  # Use the absolute value for motor degrees
 
     left_motor.reset_angle(0)
     right_motor.reset_angle(0)
 
     if degrees > 0:
+        # Turn right
         left_motor.run_target(TURN_SPEED, motor_degrees, wait=False)
-        right_motor.run_target(TURN_SPEED, -motor_degrees)
+        right_motor.run_target(TURN_SPEED, -motor_degrees, wait=True)
     elif degrees < 0:
+        # Turn left
         left_motor.run_target(TURN_SPEED, -motor_degrees, wait=False)
-        right_motor.run_target(TURN_SPEED, motor_degrees)
+        right_motor.run_target(TURN_SPEED, motor_degrees, wait=True)
 
     left_motor.brake()
     right_motor.brake()
@@ -82,6 +71,7 @@ def turn(degrees):
     text = "Turned {} degrees".format(degrees)
     return text
 
+'''
 def toggle_rotate(distance):
     # Rotate the toggle motor 360 degrees
     print("før motorstart")
@@ -92,3 +82,5 @@ def toggle_rotate(distance):
     return text
 
 # Example usage in the command parser
+'''
+
