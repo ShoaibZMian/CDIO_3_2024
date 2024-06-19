@@ -42,7 +42,7 @@ def controller():
 
 def get_latest_frame():
     try:
-        return frame_queue.get_nowait()
+        return frame_queue.get()
     except Exception as e:
         return None
 

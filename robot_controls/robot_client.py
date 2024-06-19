@@ -3,6 +3,7 @@ import os
 import math
 import socket
 import numpy as np
+import time
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -31,7 +32,7 @@ def calculate_angle(close_ball, shared_list_copy):
     vector1 = np.array([x1 - x0, y1 - y0])
     vector2 = np.array([x2 - x0, y2 - y0])
     
-    # Calculate dot product and magnitudes
+    # Calculate dot product and cross product
     dot_product = np.dot(vector1, vector2)
     cross_product = np.cross(vector1, vector2)
     magnitude1 = np.linalg.norm(vector1)
@@ -47,7 +48,8 @@ def calculate_angle(close_ball, shared_list_copy):
     angle_radians = np.arccos(cos_theta)
     
     # Determine the sign (clockwise or counterclockwise) using the cross product
-    if cross_product < 0:
+    # Compare vectors to determine the direction of rotation
+    if cross_product > 0:
         angle_radians = -angle_radians
     
     # Convert angle to degrees
@@ -121,10 +123,13 @@ def closest_ball(shared_list_copy):
 
     return closest_ball
 
-def move_to_ball(shared_list_copy, client_socket):
+def move_to_ball(shared_list_copy, client_socket, list_lock):
     global robot_moving
     robot_moving = True
+    with list_lock:
+        shared_list_copy = shared_list_copy.copy()
     close_ball = closest_ball(shared_list_copy)
+    print(f"closest ball:{close_ball}")
     if close_ball is not None:
         angle = calculate_angle(close_ball, shared_list_copy)
         distance = calculate_distance(close_ball, shared_list_copy)
@@ -134,6 +139,7 @@ def move_to_ball(shared_list_copy, client_socket):
             command = f"drive{distance}"
 
         send_command(client_socket, command)
+        #time.sleep(1)
     robot_moving = False
 
 def robot_client_thread(shared_list, list_lock, robot_ready):
@@ -141,14 +147,14 @@ def robot_client_thread(shared_list, list_lock, robot_ready):
     while True:
         with robot_ready:
             robot_ready.wait()
-        with list_lock:
-            shared_list_copy = shared_list.copy()
+        # with list_lock:
+        #     shared_list_copy = shared_list.copy()
         if not is_server_online:
             client_socket = start_client()
             if client_socket:
                 is_server_online = True
                 print("Started client")
         if client_socket:
-            move_to_ball(shared_list_copy, client_socket)
+            move_to_ball(shared_list, client_socket, list_lock)
             client_socket = False
             is_server_online = False
