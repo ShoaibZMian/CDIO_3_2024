@@ -34,9 +34,10 @@ def load_class_names(yaml_path):
 def draw_boxes(detected_objects, frame):
     for obj in detected_objects:
         x1, y1, x2, y2 = obj.x1, obj.y1, obj.x2, obj.y2
-        label = f"{obj.name} {obj.confidence:.2f}"
+        #label = f"{obj.name} {obj.confidence:.2f}"
         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        cv2.putText(frame, "label", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        cv2.circle(frame, obj.midpoint, radius=5, color=(0, 0, 255), thickness=-1)
 
 def update_list(detected_objects, results, class_names, threshold=10):
     detected_objects.clear()

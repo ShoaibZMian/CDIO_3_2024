@@ -10,9 +10,9 @@ list_lock = threading.Lock()
 robot_ready = threading.Condition()
 frame_queue = Queue()
 
-model_path = "C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v12/best.pt"
-data_yaml_path = "C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/dataset_v12/data.yaml"
-video_path = "C:/Users/SkumJustEatMe/CDIO_3_2024/image_detection/data/new_test_video_trimmed.mov"
+model_path = "/Users/matt/CDIO_3_2024/best.v12/best.v12/best.pt"
+data_yaml_path = "/Users/matt/CDIO_3_2024/best.v12/data.yaml"
+video_path = 0
 conf_thresholds = {
     'white-golf-ball': 0.4,
     'robot-front': 0.25,
