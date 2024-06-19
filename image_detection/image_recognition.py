@@ -33,24 +33,26 @@ def load_class_names(yaml_path):
 
 def draw_boxes(detected_objects, frame):
     for obj in detected_objects:
-        x1, y1, x2, y2 = obj.x1, obj.y1, obj.x2, obj.y2
-        #label = f"{obj.name} {obj.confidence:.2f}"
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        cv2.putText(frame, "label", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-        cv2.circle(frame, obj.midpoint, radius=5, color=(0, 0, 255), thickness=-1)
+        if obj.name != "robot":
+            x1, y1, x2, y2 = obj.x1, obj.y1, obj.x2, obj.y2
+            label = f"{obj.name} {float(obj.confidence):.2f}"
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            cv2.circle(frame, obj.midpoint, radius=5, color=(0, 0, 255), thickness=-1)
 
 def update_list(detected_objects, results, class_names, threshold=10):
     detected_objects.clear()
     
     for result in results:
-        if result is not None:
-            for detected in result.boxes:
-                x1, y1, x2, y2 = map(int, detected.xyxy[0])
-                class_index = int(detected.cls)
-                name = class_names[class_index]
-                confidence = detected.conf
-                new_object = DetectedObject(name, x1, y1, x2, y2, confidence)
-                detected_objects.append(new_object)
+        # Iterate over detected objects
+        for detected in result.boxes:
+            x1, y1, x2, y2 = map(int, detected.xyxy[0])
+            class_index = int(detected.cls)
+            name = class_names[class_index]
+            confidence = detected.conf
+            new_object = DetectedObject(name, x1, y1, x2, y2, confidence)
+            detected_objects.append(new_object)
+                
 
 def image_recognition_thread(model_path, data_yaml_path, video_path, conf_thresholds, shared_list, list_lock, robot_ready, frame_queue):
     model = YOLO(model_path)
