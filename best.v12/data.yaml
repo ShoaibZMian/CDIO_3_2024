@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 9
+names: ['corner1', 'egg', 'obstacle', 'orange-golf-ball', 'robot', 'robot-back', 'robot-front', 'small-goal', 'white-golf-ball']
+
+roboflow:
+  workspace: cdio-yr6ry
+  project: cdio3
+  version: 12
+  license: Private
+  url: https://app.roboflow.com/cdio-yr6ry/cdio3/12
