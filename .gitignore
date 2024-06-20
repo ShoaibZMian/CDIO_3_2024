@@ -1,0 +1,12 @@
+#ignore .xx files
+*.log
+*.avi
+*.jpg
+*.mp4
+*.png
+*.pt
+.DS_Store
+__pycache__/
+image_detection/__pycache__/
+image_detection/data
+
