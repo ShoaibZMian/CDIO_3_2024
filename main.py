@@ -5,6 +5,7 @@ import socket
 import os
 import sys
 import numpy as np
+import time
 from ultralytics import YOLO
 
 class DetectedObject:
@@ -45,21 +46,32 @@ def load_class_names(yaml_path):
         data = yaml.safe_load(file)
     return data['names']           
 
-def draw_boxes(frame):
-    for obj in current_data_model.balls + current_data_model.corners:
-        x1, y1, x2, y2 = obj.x1, obj.y1, obj.x2, obj.y2
-        label = f"{obj.name} {float(obj.confidence):.2f}"
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-        cv2.circle(frame, obj.midpoint, radius=5, color=(0, 0, 255), thickness=-1)
-    
-    for obj in [current_data_model.front, current_data_model.back, current_data_model.obstacle, current_data_model.egg, current_data_model.small_goal]:
-        if obj is not None:
-            x1, y1, x2, y2 = obj.x1, obj.y1, obj.x2, obj.y2
-            label = f"{obj.name} {float(obj.confidence):.2f}"
+def draw_boxes(frame, results, class_names):
+    for result in results:
+        for obj in result.boxes:
+            x1, y1, x2, y2 = map(int, obj.xyxy[0])
+            class_index = int(obj.cls)
+            name = class_names[class_index]
+            confidence = obj.conf
+            label = f"{name} {confidence}"
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
             cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            cv2.circle(frame, obj.midpoint, radius=5, color=(0, 0, 255), thickness=-1)
+
+    # for obj in current_data_model.balls + current_data_model.corners:
+    #     if obj is not None:
+    #         x1, y1, x2, y2 = obj.x1, obj.y1, obj.x2, obj.y2
+    #         label = f"{obj.name} {float(obj.confidence):.2f}"
+    #         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    #         cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    #         cv2.circle(frame, obj.midpoint, radius=5, color=(0, 0, 255), thickness=-1)
+        
+    # for obj in [current_data_model.front, current_data_model.back, current_data_model.obstacle, current_data_model.egg, current_data_model.small_goal]:
+    #     if obj is not None:
+    #         x1, y1, x2, y2 = obj.x1, obj.y1, obj.x2, obj.y2
+    #         label = f"{obj.name} {float(obj.confidence):.2f}"
+    #         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    #         cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    #         cv2.circle(frame, obj.midpoint, radius=5, color=(0, 0, 255), thickness=-1)
 
 def update_list(results, class_names):
     for result in results:
@@ -142,8 +154,8 @@ def calculate_distance(close_ball):
     return int(distance)
 
 def start_client():
-    target_host = "172.20.10.4"
-    #target_host = "localhost"
+    #target_host = "172.20.10.4"
+    target_host = "localhost"
     target_port = 8080
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
@@ -166,7 +178,10 @@ def start_client():
 def send_command(client_socket, command):
     try:
         client_socket.send(command.encode())
+        responce = -1
         response = client_socket.recv(4096)
+        while response == -1:
+            time.sleep(0.01)
         print(f"Server response: {response.decode()}")
         return response.decode()
     except Exception as e:
@@ -254,9 +269,9 @@ def controller(is_server_online, client_socket):
 
         results = model(frame, verbose=False)
         update_list(results, class_names)
-        draw_boxes(frame)
+        draw_boxes(frame, results, class_names)
 
-        if is_data_model_ready():
+        if True:
             if not is_server_online:
                 client_socket = start_client()
                 if client_socket:
