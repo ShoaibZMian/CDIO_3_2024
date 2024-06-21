@@ -6,7 +6,7 @@ import numpy as np
 import threading
 from queue import Queue
 from ultralytics import YOLO
-from itemManager import add_item, get_all_items, reset, update_closest_ball, items_scanned
+from image_detection.Clean_Up.itemManager import add_item, get_all_items, reset, update_closest_ball, items_scanned
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
