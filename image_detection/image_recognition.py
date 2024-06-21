@@ -69,7 +69,7 @@ def image_recognition_thread(model_path, data_yaml_path, video_path, conf_thresh
             print("No frame available")
             break
 
-        results = model(frame)
+        results = model(frame, verbose=False)
         
         with list_lock:
             update_list(shared_list, results, class_names)

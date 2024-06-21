@@ -105,6 +105,7 @@ def send_command(client_socket, command):
         client_socket.send(command.encode())
         response = client_socket.recv(4096)
         print(f"Server response: {response.decode()}")
+        return response.decode()
     except Exception as e:
         print(f"An error occurred while sending command: {e}")
 
@@ -147,8 +148,6 @@ def robot_client_thread(shared_list, list_lock, robot_ready):
     while True:
         with robot_ready:
             robot_ready.wait()
-        # with list_lock:
-        #     shared_list_copy = shared_list.copy()
         if not is_server_online:
             client_socket = start_client()
             if client_socket:
