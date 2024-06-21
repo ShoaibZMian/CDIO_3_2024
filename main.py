@@ -2,11 +2,14 @@ import cv2
 import yaml
 import math
 import socket
+import logging
 import os
-import sys
 import numpy as np
 import time
 from ultralytics import YOLO
+
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(message)s')
+
 
 class DetectedObject:
     def __init__(self, name, x1, y1, x2, y2, confidence, midpoint):
@@ -73,7 +76,10 @@ def draw_boxes(frame, results, class_names):
     #         cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
     #         cv2.circle(frame, obj.midpoint, radius=5, color=(0, 0, 255), thickness=-1)
 
-def update_list(results, class_names):
+def update_list(results, class_names, frame):
+    current_data_model.balls.clear()
+    current_data_model.corners.clear()
+
     for result in results:
         for obj in result.boxes:
             x1, y1, x2, y2 = map(int, obj.xyxy[0])
@@ -90,11 +96,17 @@ def update_list(results, class_names):
                     current_data_model.egg = new_object
                 case "obstacle":
                     current_data_model.obstacle = new_object
-                case "orange-golf-ball", "white-golf-ball":
+                case "white-golf-ball" | "orange-golf-ball":
                     current_data_model.balls.append(new_object)
                 case "robot-back":
+                    contour = calculate_mask(frame, new_object)
+                    midpoint = calculate_centroid(contour)
+                    new_object = DetectedObject(name, x1, y1, x2, y2, confidence, midpoint)
                     current_data_model.back = new_object
                 case "robot-front":
+                    contour = calculate_mask(frame, new_object)
+                    midpoint = calculate_centroid(contour)
+                    new_object = DetectedObject(name, x1, y1, x2, y2, confidence, midpoint)
                     current_data_model.front = new_object
                 case "small-goal":
                     current_data_model.small_goal = new_object
@@ -154,8 +166,8 @@ def calculate_distance(close_ball):
     return int(distance)
 
 def start_client():
-    #target_host = "172.20.10.4"
-    target_host = "localhost"
+    target_host = "172.20.10.4"
+    #target_host = "localhost"
     target_port = 8080
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
@@ -163,12 +175,12 @@ def start_client():
         client.settimeout(5)
         response = client.recv(4096)
         if response.decode() == "ready":
-            print("Server is ready.")
+            logging.debug("Server is ready.")
         else:
-            print("Server is not ready.")
+            logging.debug("Server is not ready.")
         client.settimeout(None)
     except socket.timeout:
-        print("Connection timed out.")
+        logging.error("Connection timed out.")
         return None
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -182,10 +194,10 @@ def send_command(client_socket, command):
         response = client_socket.recv(4096)
         while response == -1:
             time.sleep(0.01)
-        print(f"Server response: {response.decode()}")
+        logging.debug(f"Response command: {response.decode()}")
         return response.decode()
     except Exception as e:
-        print(f"An error occurred while sending command: {e}")
+        logging.error(f"An error occurred while sending command: {e}")
 
 def closest_ball():
     closest_distance = float('inf')
@@ -200,42 +212,35 @@ def closest_ball():
 
     return closest_ball
 
-def move_to_ball(client_socket):
+def move_to_ball(client_socket, frame, close_ball):
     robot_moving = True
-    close_ball = closest_ball()
-    print(f"closest ball:{close_ball}")
     if close_ball is not None:
         angle = calculate_angle(close_ball)
         distance = calculate_distance(close_ball)
+
         if angle is not None and (-5 > angle or angle > 5):
             command = f"turn{angle}"
         else:
             command = f"drive{distance}"
-
+        logging.debug(f"send command: {command}")
         send_command(client_socket, command)
     robot_moving = False
 
-def calculate_mask(frame, shared_list):
-    for obj in shared_list:
-        if obj.name == "robot-front":
-            cropped_front = frame[obj.x1:obj.x2, obj.y1:obj.y2]
-        if obj.name == "robot-back":
-            cropped_back = frame[obj.x1:obj.x2, obj.y1:obj.y2]
-
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-
-    lower_purple = np.array([130, 50, 50])
-    upper_purple = np.array([160, 255, 255])
-    lower_green = np.array([35, 50, 50])
-    upper_green = np.array([85, 255, 255])
-
-    mask_purple = cv2.inRange(hsv, lower_purple, upper_purple)
-    mask_green = cv2.inRange(hsv, lower_green, upper_green)
-
-    contours_purple, _ = cv2.findContours(mask_purple, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contours_green, _ = cv2.findContours(mask_green, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    return contours_green, contours_purple
+def calculate_mask(frame, obj):
+    cropped = frame[obj.y1:obj.y2, obj.x1:obj.x2]
+    hsv = cv2.cvtColor(cropped, cv2.COLOR_BGR2HSV)
+    if obj.name == "robot-back":
+        lower_purple = np.array([130, 50, 50])
+        upper_purple = np.array([160, 255, 255])
+        mask_purple = cv2.inRange(hsv, lower_purple, upper_purple)
+        contours_purple, _ = cv2.findContours(mask_purple, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        return contours_purple
+    else:
+        lower_green = np.array([35, 50, 50])
+        upper_green = np.array([85, 255, 255])
+        mask_green = cv2.inRange(hsv, lower_green, upper_green)
+        contours_green, _ = cv2.findContours(mask_green, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        return contours_green
 
 def calculate_centroid(contour):
     M = cv2.moments(contour)
@@ -257,33 +262,37 @@ def controller(is_server_online, client_socket):
     class_names = load_class_names(data_yaml_path)
     cap = cv2.VideoCapture(video_path)
 
+    time.sleep(2)
+
     if not cap.isOpened():
-            print("Error opening video stream or file")
+            logging.error("Error opening video stream or file")
             return
 
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
-            print("No frame available")
+            logging.error("No frame available")
             break
 
         results = model(frame, verbose=False)
-        update_list(results, class_names)
+        update_list(results, class_names, frame)
         draw_boxes(frame, results, class_names)
+        close_ball = closest_ball()
+        cv2.line(frame, (close_ball.x1, close_ball.y1), (current_data_model.front.x1,current_data_model.front.y1), (0, 0, 255), 2)
 
+        cv2.imshow('Frame', frame)
         if True:
             if not is_server_online:
                 client_socket = start_client()
                 if client_socket:
                     is_server_online = True
-                    print("Started client")
+                    logging.debug("Started client")
             if client_socket:
-                move_to_ball(client_socket)
+                move_to_ball(client_socket, frame, close_ball)
                 client_socket = False
                 is_server_online = False
 
-
-        cv2.imshow('Frame', frame)
+        #os.system("cls" if os.name == "nt" else "clear")
         
         if cv2.waitKey(25) & 0xFF == ord('q'):
             break
