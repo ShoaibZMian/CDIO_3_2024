@@ -18,7 +18,7 @@ conf_thresholds = {
     'robot-front': 0.25,
     'robot-back': 0.25,
     'egg': 0.70,
-    "corner1": 0.60
+    "corner1": 0.20,
 }
 
 def controller():
