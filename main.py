@@ -99,14 +99,14 @@ def update_list(results, class_names, frame):
                 case "white-golf-ball" | "orange-golf-ball":
                     current_data_model.balls.append(new_object)
                 case "robot-back":
-                    contour = calculate_mask(frame, new_object)
-                    midpoint = calculate_centroid(contour)
-                    new_object = DetectedObject(name, x1, y1, x2, y2, confidence, midpoint)
+                    #contour = calculate_mask(frame, new_object)
+                    #midpoint = calculate_centroid(contour)
+                    #new_object = DetectedObject(name, x1, y1, x2, y2, confidence, midpoint)
                     current_data_model.back = new_object
                 case "robot-front":
-                    contour = calculate_mask(frame, new_object)
-                    midpoint = calculate_centroid(contour)
-                    new_object = DetectedObject(name, x1, y1, x2, y2, confidence, midpoint)
+                    #contour = calculate_mask(frame, new_object)
+                    #midpoint = calculate_centroid(contour)
+                    #new_object = DetectedObject(name, x1, y1, x2, y2, confidence, midpoint)
                     current_data_model.front = new_object
                 case "small-goal":
                     current_data_model.small_goal = new_object
@@ -166,7 +166,8 @@ def calculate_distance(close_ball):
     return int(distance)
 
 def start_client():
-    target_host = "172.20.10.4"
+    target_host = "192.168.18.18"
+    #target_host = "172.20.10.4"
     #target_host = "localhost"
     target_port = 8080
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -278,7 +279,7 @@ def controller(is_server_online, client_socket):
         update_list(results, class_names, frame)
         draw_boxes(frame, results, class_names)
         close_ball = closest_ball()
-        cv2.line(frame, (close_ball.x1, close_ball.y1), (current_data_model.front.x1,current_data_model.front.y1), (0, 0, 255), 2)
+        #cv2.line(frame, (close_ball.x1, close_ball.y1), (current_data_model.front.x1,current_data_model.front.y1), (0, 0, 255), 2)
 
         cv2.imshow('Frame', frame)
         if True:
