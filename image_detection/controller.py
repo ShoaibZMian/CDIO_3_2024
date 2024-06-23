@@ -3,7 +3,8 @@ import time
 import cv2
 import numpy as np
 from queue import Queue
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 from image_recognition import image_recognition_thread
 from robot_controls.robot_client import robot_client_thread
 
@@ -78,10 +79,6 @@ def create_grid(frame, items):
     grid_size_x = frame_size_x
     grid_size_y = frame_size_y
 
-    # Debug print statements
-    print(f"Frame size: {frame_size_x} x {frame_size_y}")
-    print(f"Grid size: {grid_size_x} x {grid_size_y}")
-
     # Create a grid with specified dimensions
     grid = np.zeros((grid_size_y, grid_size_x))
 
@@ -89,32 +86,40 @@ def create_grid(frame, items):
     scale_x = grid_size_x / frame_size_x
     scale_y = grid_size_y / frame_size_y
 
-    # Debug print statements
-    print(f"Scaling factors - X: {scale_x}, Y: {scale_y}")
-
     # Place items on the grid
     for item in items:
         grid_x1 = int(item.x1 * scale_x)
         grid_x2 = int(item.x2 * scale_x)
         grid_y1 = int(item.y1 * scale_y)
         grid_y2 = int(item.y2 * scale_y)
-        
-        # Debug print statements
-        print(f"Item coordinates (frame): ({item.x1}, {item.y1}), ({item.x2}, {item.y2})")
-        print(f"Item coordinates (grid): ({grid_x1}, {grid_y1}), ({grid_x2}, {grid_y2})")
-        
+
+        # Set grid value based on item name
+        if item.name == 'white-golf-ball':
+            grid_value = 3
+        elif item.name == 'robot-front':
+            grid_value = 2
+        elif item.name == 'obstacle' or item.name == 'egg':
+            grid_value = 1
+        else:
+            grid_value = 0  # Default value for other items (Show as empty cell)
+
         for x in range(grid_x1, grid_x2 + 1):
             for y in range(grid_y1, grid_y2 + 1):
                 if 0 <= x < grid_size_x and 0 <= y < grid_size_y:
-                    grid[y][x] = 1  # Note: grid coordinates (y, x)
+                    grid[y][x] = grid_value  # Note: grid coordinates (y, x)
 
     return grid
 
 def display_grid_on_image(frame, grid):
-    plt.figure(figsize=(10, 10))
-    plt.imshow(frame)
-    plt.imshow(grid, cmap='hot', alpha=0.5)  # Overlay grid with some transparency
-    plt.gca()  # Invert y-axis to match the image coordinates
+    fig, ax = plt.subplots(figsize=(10, 10))
+
+    def update(*args):
+        ax.clear()
+        image_frame = ax.imshow(frame)
+        image_grid = ax.imshow(grid, cmap='hot', alpha=0.5)
+        return [image_frame, image_grid]  # Return the list of artists
+
+    ani = animation.FuncAnimation(fig, update, interval=1000)  # Update every 100 milliseconds
     plt.show()
 
 if __name__ == "__main__":
