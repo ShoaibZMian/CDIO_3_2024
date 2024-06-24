@@ -3,13 +3,11 @@ import yaml
 import math
 import socket
 import logging
-import os
 import numpy as np
 import time
 from ultralytics import YOLO
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(message)s')
-
 
 class DetectedObject:
     def __init__(self, name, x1, y1, x2, y2, confidence, midpoint):
@@ -33,9 +31,9 @@ class data_model:
 
 current_data_model = data_model()
 
-model_path = "/Users/matt/CDIO_3_2024/best.v12/best (1).pt"
-data_yaml_path = "/Users/matt/CDIO_3_2024/best.v12/data.yaml"
-video_path = 0
+model_path = "best14/best.pt"
+data_yaml_path = "best14/data.yaml"
+video_path = 1
 conf_thresholds = {'white-golf-ball': 0.4,'robot-front': 0.25,'robot-back': 0.25,'egg': 0.70,"corner1": 0.60}
 
 
@@ -166,8 +164,8 @@ def calculate_distance(close_ball):
     return int(distance)
 
 def start_client():
-    target_host = "192.168.18.18"
-    #target_host = "172.20.10.4"
+    # target_host = "192.168.18.18"
+    target_host = "172.20.10.4"
     #target_host = "localhost"
     target_port = 8080
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -279,7 +277,14 @@ def controller(is_server_online, client_socket):
         update_list(results, class_names, frame)
         draw_boxes(frame, results, class_names)
         close_ball = closest_ball()
-        #cv2.line(frame, (close_ball.x1, close_ball.y1), (current_data_model.front.x1,current_data_model.front.y1), (0, 0, 255), 2)
+        if close_ball is None:
+            logging.debug("no closest ball found!")
+        elif current_data_model.front is None:
+            logging.debug("no front found!")
+        elif current_data_model.front is None:
+            logging.debug("no back found!")
+        else:
+            cv2.line(frame, (close_ball.x1, close_ball.y1), (current_data_model.front.x1,current_data_model.front.y1), (0, 0, 255), 2)
 
         cv2.imshow('Frame', frame)
         if True:
