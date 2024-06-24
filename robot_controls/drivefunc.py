@@ -11,7 +11,7 @@ ev3 = EV3Brick()
 
 left_motor = Motor(Port.B)
 right_motor = Motor(Port.C)
-#toggle_motor = Motor(Port.A)
+toggle_motor = Motor(Port.A)
 
 # Constants
 WHEEL_DIAMETER = 55  # Hjulets størrelse i mm
@@ -71,16 +71,18 @@ def turn(degrees):
     text = "Turned {} degrees".format(degrees)
     return text
 
-'''
-def toggle_rotate(distance):
-    # Rotate the toggle motor 360 degrees
+def toggle_on(distance):
+    toggle_motor.reset_angle(0)
     print("før motorstart")
-    toggle_motor.run_target(500, 360)
-    print("inde efter motor run target")
-    
-    text = "Toggle motor rotated 360 degrees"
+    toggle_motor.run_target(500, 120)
+
+    text = "turning vacuum on"
     return text
 
-# Example usage in the command parser
-'''
+def toggle_off(distance):
+    toggle_motor.reset_angle(0)
+    print("før motorstart")
+    toggle_motor.run_target(500, -115)
 
+    text = "Turning vacuum off"
+    return text
