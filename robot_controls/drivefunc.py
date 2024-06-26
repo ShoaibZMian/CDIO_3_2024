@@ -2,78 +2,85 @@
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import Motor
 from pybricks.parameters import Port
-from pybricks.tools import wait
+from pybricks.tools import wait, StopWatch
 from pybricks.robotics import DriveBase
-from pybricks.ev3devices import GyroSensor
-from pybricks.parameters import Direction
-<<<<<<< Updated upstream
-import math
-=======
-import cv2
-import numpy as np
-import math
 
->>>>>>> Stashed changes
+
+import math
 
 ev3 = EV3Brick()
 
-# Tilslut gyrosensoren til port 1
-gyro = GyroSensor(Port.S1)
 left_motor = Motor(Port.B)
 right_motor = Motor(Port.C)
+toggle_motor = Motor(Port.A)
 
-# Constants
-WHEEL_DIAMETER = 55 # Hjulets størrelse i mm
-AXEL_TRACK = 155  # Distancen mellem hjulene
+WHEEL_DIAMETER = 55  # Hjulets størrelse i mm
+AXEL_TRACK = 172  # Distancen mellem hjulene
+DRIVE_SPEED = 500  # Speed for driving forward/backward
+TURN_SPEED = 200  # Speed for turning
+WHEEL_CIRCUMFERENCE = math.pi * WHEEL_DIAMETER
 
 robot = DriveBase(left_motor, right_motor, WHEEL_DIAMETER, AXEL_TRACK)
 
-def drive_forward(distance_mm):
-    gyro.reset_angle(0)
-    robot.reset()
-   
-    while robot.distance() < distance_mm:
-        correction = gyro.angle()  # Negative feedback for correction
-        # correction = 0.5 * angle_error  # Apply proportional control to the correction
-        # correction = max(min(correction, 30), -30)
+def drive(distance_mm):
+    # Determine the direction based on the sign of the distance
+    direction = 1 if distance_mm > 0 else -1
 
-        robot.drive(250, correction)# hastigheden må ikke ændres, da længden vil blive upræcis
+    # Calculate the number of motor degrees needed to drive the specified distance
+    rotations = abs(distance_mm) / WHEEL_CIRCUMFERENCE
+    degrees = rotations * 360
 
-    robot.stop()
+    left_motor.reset_angle(0)
+    right_motor.reset_angle(0)
+
+    left_motor.run_target(DRIVE_SPEED * direction, degrees * direction, wait=False)
+    right_motor.run_target(DRIVE_SPEED * direction, degrees * direction)
+
     left_motor.brake()
     right_motor.brake()
 
-    final_angle = gyro.angle()
-    text = "Final angle deviation: {} degrees".format(final_angle)
+    text = "Driven {} mm".format(distance_mm)
     return text
-
-
-
-def drive_backward(distance_mm):
-    while robot.distance() > -distance_mm:
-        robot.drive(-400, 0)
-    robot.stop()
-    left_motor.brake()
-    right_motor.brake()
-    return "Driven backward "+ distance_mm +"mm"
-
 def turn(degrees):
     # Ensure the degrees are within the range of -365 to 365
     if degrees > 365 or degrees < -365:
         return "Error: Degrees must be between -365 and 365"
-    
-    gyro.reset_angle(0)
-    initial_angle = gyro.angle()
-    target_angle = initial_angle + degrees
-    
+
+    # Calculate the number of motor degrees needed to turn the specified degrees
+    turn_circumference = math.pi * AXEL_TRACK
+    rotations = (degrees / 360) * turn_circumference / WHEEL_CIRCUMFERENCE
+    motor_degrees = abs(rotations * 360)  # Use the absolute value for motor degrees
+
+    left_motor.reset_angle(0)
+    right_motor.reset_angle(0)
+
     if degrees > 0:
-        while gyro.angle() < target_angle:
-            robot.drive(0, -80)  # Turning left
+        # Turn right
+        left_motor.run_target(TURN_SPEED, motor_degrees, wait=False)
+        right_motor.run_target(TURN_SPEED, -motor_degrees, wait=True)
     elif degrees < 0:
-        while gyro.angle() > target_angle:
-            robot.drive(0, 80)  # Turning right
-    
-    robot.stop()
+        # Turn left
+        left_motor.run_target(TURN_SPEED, -motor_degrees, wait=False)
+        right_motor.run_target(TURN_SPEED, motor_degrees, wait=True)
+
+    left_motor.brake()
+    right_motor.brake()
+
     text = "Turned {} degrees".format(degrees)
     return text
 
+def toggle_on(distance):
+    toggle_motor.reset_angle(0)
+    print("før motorstart")
+    toggle_motor.run_target(500, 110)
+
+    text = "turning vacuum on"
+    return text
+
+def toggle_off(distance):
+    toggle_motor.reset_angle(0)
+    print("før motorstart")
+    toggle_motor.run_target(500, -110)
+
+    text = "Turning vacuum off"
+    return text

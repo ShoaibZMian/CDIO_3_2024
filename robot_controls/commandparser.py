@@ -1,4 +1,4 @@
-from drivefunc import drive_forward, drive_backward, turn
+from drivefunc import drive, turn, toggle_on, toggle_off
 import re
 
 def parse_and_execute(command):
@@ -19,15 +19,17 @@ def parse_and_execute(command):
     action = items[0].lower()
     distance = int(items[1])
 
-    if action in ["forward", "backward", "turn"]:
-        if action == "forward":
-            print("Driving forward {} cm".format(distance))
-            return drive_forward(distance)
-        elif action == "backward":
-            print("Driving backward {} cm".format(distance))
-            return drive_backward(distance)
+    if action in ["drive", "turn","on","off"]:
+        if action == "drive":
+            return drive(distance)
         elif action == "turn":
-            print("Turning {} degrees".format(distance))
             return turn(distance)
+        if action == "on":
+            print("toggle on")
+            return toggle_on(distance)
+        if action == "off":
+            print("toggle off")
+            return toggle_off(distance)
+
     else:
         return "Invalid command or format."

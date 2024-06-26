@@ -4,15 +4,9 @@ import threading
 import subprocess
 from commandparser import parse_and_execute
 
-<<<<<<< Updated upstream
-bind_ip = "172.20.10.4"
-=======
-
-
-
-bind_ip = "172.20.10.4"
-
->>>>>>> Stashed changes
+#bind_ip = "192.168.18.18"
+#bind_ip = "172.20.10.4"
+bind_ip = "192.168.105.18"
 bind_port = 8080
 
 # create and bind a new socket
