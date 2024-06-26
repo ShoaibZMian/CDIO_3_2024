@@ -58,7 +58,8 @@ check_step = CheckStep.FIRST
 model_path = "/Users/matt/CDIO_3_2024/v14/best.pt"
 data_yaml_path = "/Users/matt/CDIO_3_2024/v14/data.yaml"
 video_path = 0
-conf_thresholds = {'white-golf-ball': 0.4,'robot-front': 0.25,'robot-back': 0.25,'egg': 0.70,"corner1": 0.60}
+#conf_thresholds = {'white-golf-ball': 0.5,'robot-front': 0.25,'robot-back': 0.25,'egg': 0.5,"corner1": 0.60}
+conf_thresholds = {'corner1': 0.5, 'egg': 0.5, 'obstacle': 0.5, 'orange-golf-ball': 0.5, 'robot-back': 0.1, 'robot-front': 0.1, 'small-goal': 0.5, 'white-golf-ball': 0.35}
 
 
 def calculate_midpoint(x1,y1,x2,y2):
@@ -80,24 +81,9 @@ def draw_boxes(frame, results, class_names):
             confidence = obj.conf
             label = f"{name} {confidence}"
             if name != "robot":
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
-    # for obj in current_data_model.balls + current_data_model.corners:
-    #     if obj is not None:
-    #         x1, y1, x2, y2 = obj.x1, obj.y1, obj.x2, obj.y2
-    #         label = f"{obj.name} {float(obj.confidence):.2f}"
-    #         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-    #         cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-    #         cv2.circle(frame, obj.midpoint, radius=5, color=(0, 0, 255), thickness=-1)
-        
-    # for obj in [current_data_model.front, current_data_model.back, current_data_model.obstacle, current_data_model.egg, current_data_model.small_goal]:
-    #     if obj is not None:
-    #         x1, y1, x2, y2 = obj.x1, obj.y1, obj.x2, obj.y2
-    #         label = f"{obj.name} {float(obj.confidence):.2f}"
-    #         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-    #         cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-    #         cv2.circle(frame, obj.midpoint, radius=5, color=(0, 0, 255), thickness=-1)
+                if name in conf_thresholds and confidence >= conf_thresholds[name]:
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
 def update_list(results, class_names, frame):
     current_data_model.balls.clear()
@@ -111,28 +97,23 @@ def update_list(results, class_names, frame):
             confidence = obj.conf
             midpoint = calculate_midpoint(x1,y1,x2,y2)
             new_object = DetectedObject(name, x1, y1, x2, y2, confidence, midpoint)
-            
-            match new_object.name:
-                case "corner1":
-                    current_data_model.corners.append(new_object)
-                case "egg":
-                    current_data_model.egg = new_object
-                case "obstacle":
-                    current_data_model.obstacle = new_object
-                case "white-golf-ball" | "orange-golf-ball":
-                    current_data_model.balls.append(new_object)
-                case "robot-back":
-                    #contour = calculate_mask(frame, new_object)
-                    #midpoint = calculate_centroid(contour)
-                    #new_object = DetectedObject(name, x1, y1, x2, y2, confidence, midpoint)
-                    current_data_model.back = new_object
-                case "robot-front":
-                    #contour = calculate_mask(frame, new_object)
-                    #midpoint = calculate_centroid(contour)
-                    #new_object = DetectedObject(name, x1, y1, x2, y2, confidence, midpoint)
-                    current_data_model.front = new_object
-                case "small-goal":
-                    current_data_model.small_goal = new_object
+
+            if name in conf_thresholds and confidence >= conf_thresholds[name]:
+                match new_object.name:
+                    case "corner1":
+                        current_data_model.corners.append(new_object)
+                    case "egg":
+                        current_data_model.egg = new_object
+                    case "obstacle":
+                        current_data_model.obstacle = new_object
+                    case "white-golf-ball" | "orange-golf-ball":
+                        current_data_model.balls.append(new_object)
+                    case "robot-back":
+                        current_data_model.back = new_object
+                    case "robot-front":
+                        current_data_model.front = new_object
+                    case "small-goal":
+                        current_data_model.small_goal = new_object
         
 def calculate_angle(midpoint):
     if not hasattr(current_data_model, "front"):
@@ -191,8 +172,8 @@ def calculate_distance(midpoint, end_of_robot):
 
 def start_client():
     #target_host = "192.168.18.18"
-    #target_host = "172.20.10.4"
-    target_host = "192.168.105.18"
+    target_host = "172.20.10.4"
+    #target_host = "192.168.105.18"
     #target_host = "localhost"
     target_port = 8080
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -251,16 +232,7 @@ def move_to_ball(closest_ball):
     angle = calculate_angle(closest_ball.midpoint)
     distance = calculate_distance(closest_ball.midpoint, "front")
 
-    if angle is not None and (-10 > angle or angle > 10):
-        command = f"turn{angle}"
-        logging.debug(f"send command: {command}")
-        send_command(command)
-        return
-    if calculate_distance(closest_ball.midpoint, "front") > 10:
-        command = f"drive{distance}"
-        logging.debug(f"send command: {command}")
-        send_command(command)
-        return
+    
     global number_of_balls
     global check_step
     if number_of_balls > len(current_data_model.balls):
@@ -274,8 +246,20 @@ def move_to_ball(closest_ball):
             logging.debug("second checkstep")
             number_of_balls -= 1
             check_step = CheckStep.FIRST
-            phase = Phase.DELIVER
+            if number_of_balls % 5 == 0:
+                phase = Phase.DELIVER
             return
+    
+    if angle is not None and (-10 > angle or angle > 10):
+        command = f"turn{angle}"
+        logging.debug(f"send command: {command}")
+        send_command(command)
+        return
+    if calculate_distance(closest_ball.midpoint, "front") > 10:
+        command = f"drive{distance}"
+        logging.debug(f"send command: {command}")
+        send_command(command)
+        return
         
 def wiggle() -> None:
     logging.debug("robot is wiggling")
@@ -322,14 +306,14 @@ def is_data_model_ready():
 def on_point(target):
     distance = calculate_distance(target, "back")
     logging.debug(f"distance to target: {distance}")
-    return distance <= 50
+    return distance <= 120
 
 def deliver_to_goal(client_socket):
     global deliver_step
     if deliver_step == DeliverStep.NOT_SET:
         deliver_step = DeliverStep.APPROACH_MIDPOINT
 
-    step1_x = current_data_model.small_goal.midpoint[0] + 300
+    step1_x = current_data_model.small_goal.midpoint[0] - 300
     midpoint = (step1_x, current_data_model.small_goal.midpoint[1])
     logging.debug(f"current deliverstep: {deliver_step.name}")
     match deliver_step:
@@ -350,7 +334,7 @@ def deliver_to_goal(client_socket):
             else:
                 deliver_step = DeliverStep.APPROACH_GOAL
         case DeliverStep.APPROACH_GOAL:
-            if not on_point((current_data_model.small_goal.midpoint[0] + 100, current_data_model.small_goal.midpoint[1])):
+            if not on_point((current_data_model.small_goal.midpoint[0] - 100, current_data_model.small_goal.midpoint[1])):
                 angle_to_goal = calculate_angle(current_data_model.small_goal.midpoint)
             if angle_to_goal is not None and (-10 > angle_to_goal or angle_to_goal > 10):
                 command = f"turn{angle_to_goal}"
@@ -363,19 +347,21 @@ def deliver_to_goal(client_socket):
         case DeliverStep.AT_GOAL:
             angle_to_goal = calculate_angle(current_data_model.small_goal.midpoint)
             if angle_to_goal is not None and (-5 > angle_to_goal or angle_to_goal > 5):
-                command = f"turn{angle_to_goal}"
+                send_command(f"turn{angle_to_goal}")
             else:
-                command = "off0"
-            send_command(command)
-            logging.debug(f"send command: {command}")
-            time.sleep(5)
-            send_command("on0")
-            logging.debug(f"send command: on0")
-            send_command("drive-50")
-            logging.debug(f"send command: drive-50")
-            deliver_step = DeliverStep.NOT_SET
-            global phase
-            phase = Phase.BALL
+                send_command("off0")
+                logging.debug(f"send command: off0")
+                time.sleep(5)
+                send_command("on0")
+                logging.debug(f"send command: on0")
+                send_command("drive-30")
+                logging.debug(f"send command: drive-30")
+                send_command("turn180")
+                logging.debug(f"send command: turn180")
+            
+                deliver_step = DeliverStep.NOT_SET
+                global phase
+                phase = Phase.BALL
         case _: 
             logging.debug("error: deliverstep is not set")
         
@@ -399,16 +385,16 @@ def controller(is_server_online, client_socket):
             break
 
         logging.debug(f"current phase: {phase.name}")
-        results = model(frame, verbose=False)
+        results = model(frame, verbose=False, conf=0.40)
         update_list(results, class_names, frame)
         global number_of_balls
-        number_of_balls = len(current_data_model.balls)
+        if number_of_balls == -1:
+            number_of_balls = len(current_data_model.balls)
+
         draw_boxes(frame, results, class_names)
 
         if len(current_data_model.balls) == 0:
             phase = Phase.DELIVER
-        else:
-            phase = Phase.BALL
 
         closest_ball = get_closest_ball()
         #if close_ball:
@@ -416,7 +402,7 @@ def controller(is_server_online, client_socket):
         if hasattr(current_data_model, "front") and hasattr(current_data_model, "back"):
             cv2.line(frame, current_data_model.front.midpoint, current_data_model.back.midpoint , (0, 0, 255), 2)
         if hasattr(current_data_model, "small_goal") and hasattr(current_data_model, "back"):
-            cv2.line(frame, current_data_model.small_goal.midpoint, (current_data_model.back.midpoint[0] + 100, current_data_model.small_goal.midpoint[1]) , (0, 0, 255), 2)
+            cv2.line(frame, current_data_model.small_goal.midpoint, (current_data_model.back.midpoint[0] - 100, current_data_model.small_goal.midpoint[1]) , (0, 0, 255), 2)
 
         cv2.imshow('Frame', frame)
         logging.debug(closest_ball)
